@@ -1,0 +1,3 @@
+#define WOLFSSL_DES_ECB
+#define HAVE_AES_ECB
+#define WOLFSSL_AES_DIRECT
