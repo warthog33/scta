@@ -41,6 +41,17 @@ std::vector<uint_8>  StringToByteArray ( char* string )
 	return result;
 }
 
+void PrintUsage()
+{
+	printf ( "Side Channel Test Artefact\n" );
+	printf ( "Usage: scta -k<key> -i<input> -a<algorithm> -m<implementation> \n" );
+	printf ( "    -k<key> is a string of hexadecimal characters, length between 16 and 64 depending upon the algorithm\n" );
+	printf ( "    -i<input> is string of hexadecimal characters, length must be multiple of block size of cipher\n" );
+	printf ( "    -a<algorithm> currently supported include DES and AES\n" );
+	printf ( "    -m<implementation> currently supported: mbedtls, openssl, SimpleSoftware, WolfCrypt  \n" );
+	printf ( "       TexasInstruments, TomCrypt, SmartCardAES (masked decryption only), KernelCrypto \n" );
+	printf ( "\n" );
+}
 void RunSelfTests();
 int main (int argc, char** argv)
 {
@@ -48,11 +59,14 @@ int main (int argc, char** argv)
 	std::vector<uint_8> input = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; 
 	const char* algorithm = "DES";
 	CryptoImplementation* implementation = new MbedTLSImplementation();
-	
+
 	int c;
-	while ((c = getopt (argc, argv, "k:i:a:m:t")) != -1)
+	while ((c = getopt (argc, argv, "k:i:a:m:th")) != -1)
     		switch (c)
       		{
+		case 'h':
+		  PrintUsage();
+		  return 1;
      	 	case 'k':
        		 key = StringToByteArray(optarg);
        		 break;
