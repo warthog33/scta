@@ -6,8 +6,8 @@ OBJS += mbedtls/des.o MbedTLS.o mbedtls/aes.o
 OBJS += TexasInstruments/TI_aes_128.o TexasInstruments/DES.o TexasInstruments.o
 OBJS += openssl/aes_core.o openssl/des_enc.o openssl/ecb_enc.o openssl/ecb3_enc.o openssl/set_key.o openssl/aes_ecb.o OpenSSL.o 
 OBJS += smartcard-aes-fw-master/inv_aes.o SmartCardAES.o
-CFLAGS = -I.  
-CXXFLAGS = -I. -std=c++11
+CFLAGS = -I.  -std=c99
+CXXFLAGS = -I. -std=c99
 
 OBJS +=  TexasInstruments/TI_aes_128.o TexasInstruments/DES.o TexasInstruments.o
 

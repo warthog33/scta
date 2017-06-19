@@ -45,21 +45,21 @@ static std::vector<uint_8> DoKernelSymmetric ( const char* name, std::vector<uin
 	        error_at_line ( 1, 0, __FILE__, __LINE__,  "accept error=%i\n", errno );
 
         struct iovec msg_iov = {
-                .iov_base = (void*)input.data(),
-                .iov_len = (size_t)input.size(),
+                /*.iov_base =*/ (void*)input.data(),
+                /*.iov_len =*/ (size_t)input.size(),
         };
 
         uint_32 msg_control = ALG_OP_ENCRYPT;
         char cmsgbuf[CMSG_SPACE(sizeof(msg_control))];
 
         struct msghdr msg = {
-                .msg_name = NULL,
-                .msg_namelen = 0,
-                .msg_iov = &msg_iov,
-                .msg_iovlen = 1,
-                .msg_control = cmsgbuf,
-                .msg_controllen = sizeof(cmsgbuf),
-                .msg_flags = ALG_OP_ENCRYPT,
+                /*.msg_name =*/ NULL,
+                /*.msg_namelen =*/ 0,
+                /*.msg_iov =*/ &msg_iov,
+                /*.msg_iovlen =*/ 1,
+                /*.msg_control =*/ cmsgbuf,
+                /*.msg_controllen =*/ sizeof(cmsgbuf),
+                /*.msg_flags =*/ ALG_OP_ENCRYPT,
         };
 
         struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
