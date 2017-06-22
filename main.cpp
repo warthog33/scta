@@ -26,6 +26,19 @@ void CryptoImplementation::Log (const char* alg, std::vector<uint_8> const & inp
 		printf ( "%02x", key[i] );
 	printf ( " %s\n", GetName()) ;
 }
+void CryptoImplementation::Log (const char* alg, std::vector<uint_8> const & input, std::vector<uint_8> const & output, const char* privateKey, FLAGS flags )
+{
+	printf ( "%s", alg );
+	printf ( " input=" );	
+	for ( int i = 0; i < input.size(); i++ ) 
+		printf ( "%02x", input[i] );
+	printf ( " output=" );	
+	for ( int i = 0; i < output.size(); i++ ) 
+		printf ( "%02x", output[i] );
+	printf ( " key=" );	
+	printf ( "%s", privateKey );
+	printf ( " %s\n", GetName()) ;
+}
 
 std::vector<uint_8>  StringToByteArray ( char* string )
 {
@@ -61,10 +74,11 @@ int main (int argc, char** argv)
 	std::vector<uint_8> key (defaultKey, defaultKey+sizeof(defaultKey));
 	std::vector<uint_8> input (defaultInput, defaultInput + sizeof(defaultInput)); 
 	const char* algorithm = "DES";
+	const char* privateKey = "";
 	CryptoImplementation* implementation = new MbedTLSImplementation();
 
 	int c;
-	while ((c = getopt (argc, argv, "k:i:a:m:th")) != -1)
+	while ((c = getopt (argc, argv, "k:i:a:m:thp:")) != -1)
     		switch (c)
       		{
 		case 'h':
@@ -79,6 +93,9 @@ int main (int argc, char** argv)
       		case 'a':
         	 algorithm = optarg;
         	 break;
+		case 'p':
+		 privateKey = optarg;
+		 break;
       		case 'm':
 		  if ( strcasecmp ( optarg, "mbedtls" ) == 0 )
 			implementation = new MbedTLSImplementation();
@@ -96,6 +113,8 @@ int main (int argc, char** argv)
 			implementation = new SmartCardAES();
 		  else if ( strcasecmp ( optarg, "KernelCrypto" ) == 0 )
 			implementation = new KernelCrypto();
+		  else if ( strcasecmp ( optarg, "gcrypt" ) == 0 )
+			implementation = new LibGCrypt();
         	 break;
 		case 't':
 		 RunSelfTests();
@@ -110,6 +129,8 @@ int main (int argc, char** argv)
 		output = implementation->DoDESWithLogging ( input, key );
 	else if ( strcasecmp ( algorithm, "AES" ) == 0 ) 
 		output = implementation->DoAESWithLogging ( input, key );
+	else if ( strcasecmp ( algorithm, "RSA" ) == 0 ) 
+		output = implementation->DoRSAWithLogging ( input, privateKey );
 }
 
 
@@ -137,6 +158,7 @@ void RunSelfTests ()
 	CryptoImplementation* tomCrypt = new TomCrypt();
 	CryptoImplementation* smartCard = new SmartCardAES();
 	CryptoImplementation* kernelCrypto = new KernelCrypto();
+	CryptoImplementation* libGCrypt = new LibGCrypt();
 	
 	simpleSoftware->DoDESWithLogging ( input, key);
 	mbedTLS->DoDESWithLogging ( input, key);
@@ -145,6 +167,7 @@ void RunSelfTests ()
 	wolfCrypt->DoDESWithLogging ( input, key);
 	tomCrypt->DoDESWithLogging ( input, key);
 	kernelCrypto->DoDESWithLogging ( input, key);
+	libGCrypt->DoDESWithLogging ( input, key);
 
 	mbedTLS->DoDESWithLogging ( input, key2);
 	texasInstruments->DoDESWithLogging ( input, key2);
@@ -152,6 +175,7 @@ void RunSelfTests ()
 	wolfCrypt->DoDESWithLogging ( input, key2);
 	tomCrypt->DoDESWithLogging ( input, key2);
 	kernelCrypto->DoDESWithLogging ( input, key2);
+	libGCrypt->DoDESWithLogging ( input, key2);
 
 	mbedTLS->DoDESWithLogging ( input, key3);
 	texasInstruments->DoDESWithLogging ( input, key3);
@@ -159,6 +183,7 @@ void RunSelfTests ()
 	wolfCrypt->DoDESWithLogging ( input, key3);
 	tomCrypt->DoDESWithLogging ( input, key3);
 	kernelCrypto->DoDESWithLogging ( input, key3);
+	libGCrypt->DoDESWithLogging ( input, key3);
 
 	mbedTLS->DoAESWithLogging ( input, key4);
 	texasInstruments->DoAESWithLogging ( input, key4);
@@ -167,6 +192,7 @@ void RunSelfTests ()
 	tomCrypt->DoAESWithLogging ( input, key4);
 	smartCard->DoAESWithLogging ( input2, key4);
 	kernelCrypto->DoAESWithLogging ( input, key4);
+	libGCrypt->DoAESWithLogging ( input, key4);
 
 	//mbedTLS->DoAESWithLogging ( input, output, sizeof(input), key3, sizeof(key3));
 	//texasInstruments->DoAESWithLogging ( input, output, sizeof(input), key3, sizeof(key3));

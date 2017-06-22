@@ -14,6 +14,7 @@ class CryptoImplementation
 	public:
 	virtual const char* GetName () = 0;
 	void Log ( const char* alg, std::vector<uint_8> const& input, std::vector<uint_8> const& output, std::vector<uint_8>const & key, FLAGS flags );
+	void Log ( const char* alg, std::vector<uint_8> const& input, std::vector<uint_8> const& output, const char* privateKey, FLAGS flags );
 	std::vector<uint_8> DoAESWithLogging ( std::vector<uint_8> const& input, std::vector<uint_8> const& key, FLAGS flags = NONE )
 	{ 	
 		std::vector<uint_8> output = DoAES ( input, key, flags );
@@ -26,8 +27,17 @@ class CryptoImplementation
 		Log ( "DES", input, output, key, flags );
 		return output;
 	}
+	std::vector<uint_8> DoRSAWithLogging ( std::vector<uint_8>const & input, const char* privateKey, FLAGS flags = NONE )
+	{
+		std::vector<uint_8> output  = DoRSA ( input, privateKey, flags ); 
+		Log ( "RSA", input, output, privateKey, flags );
+		return output;
+	}
+	
 	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS flags ) = 0 ; 
 	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS flags ) = 0 ; 
+	virtual std::vector<uint_8> DoRSA ( std::vector<uint_8> const & input, const char* privateKey, FLAGS flags )
+	{ error ( 1, 0, "Not Implemented" ); return std::vector<uint_8>(); }
 };
 
 class SimpleSoftwareImplementation : public CryptoImplementation
@@ -43,6 +53,7 @@ class MbedTLSImplementation : public CryptoImplementation
 	virtual const char* GetName () { return "MbedTLS"; }
 	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS flags ); 
 	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS flags ); 
+	virtual std::vector<uint_8> DoRSA ( std::vector<uint_8> const & input, const char* keyInPemFormat, FLAGS flags ); 
 };
 class TexasInstrumentsImplementation : public CryptoImplementation
 {
