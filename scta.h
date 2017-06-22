@@ -55,6 +55,14 @@ class MbedTLSImplementation : public CryptoImplementation
 	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS flags ); 
 	virtual std::vector<uint_8> DoRSA ( std::vector<uint_8> const & input, const char* keyInPemFormat, FLAGS flags ); 
 };
+class LibGCrypt : public CryptoImplementation
+{
+	public:
+	virtual const char* GetName () { return "LibGCrypt"; }
+	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS flags ); 
+	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS flags ); 
+	virtual std::vector<uint_8> DoRSA ( std::vector<uint_8> const & input, const char* keyInPemFormat, FLAGS flags ); 
+};
 class TexasInstrumentsImplementation : public CryptoImplementation
 {
 	public:
@@ -82,6 +90,7 @@ class WolfCrypt : public CryptoImplementation
 	virtual const char* GetName () { return "WolfCrypt"; }
 	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS flags ); 
 	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS flags ); 
+	virtual std::vector<uint_8> DoRSA ( std::vector<uint_8> const & input, const char* keyInPemFormat, FLAGS flags ); 
 };
 class TomCrypt : public CryptoImplementation
 {
@@ -89,6 +98,7 @@ class TomCrypt : public CryptoImplementation
 	virtual const char* GetName () { return "TomCrypt"; }
 	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS flags ); 
 	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS flags ); 
+	virtual std::vector<uint_8> DoRSA ( std::vector<uint_8> const & input, const char* keyInPemFormat, FLAGS flags ); 
 };
 class KernelCrypto : public CryptoImplementation
 {
