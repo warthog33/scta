@@ -19,10 +19,23 @@ OBJS += Simple/DES.o SimpleSoftware.o
 #OBJS += mbedtls/des.o MbedTLS.o mbedtls/aes.o mbedtls/rsa.o mbedtls/pk.o mbedtls/bignum.o mbedtls/md.o mbedtls/pk_wrap.o mbedtls/pkparse.o mbedtls/asn1parse.o mbedtls/oid.o mbedtls/pem.o mbedtls/base64.o
 #OBJS += MbedTLS.o mbedtls/mbedtls-2.4.2/library/libmbedcrypto.a
 OBJS += TexasInstruments/TI_aes_128.o TexasInstruments/DES.o TexasInstruments.o
-OBJS += openssl/aes_core.o openssl/des_enc.o openssl/ecb_enc.o openssl/ecb3_enc.o openssl/set_key.o openssl/aes_ecb.o OpenSSL.o 
+#OBJS += openssl/aes_core.o openssl/des_enc.o openssl/ecb_enc.o openssl/ecb3_enc.o openssl/set_key.o openssl/aes_ecb.o OpenSSL.o 
 OBJS += smartcard-aes-fw-master/inv_aes.o SmartCardAES.o
 
 OBJS += KernelCrypto.o
+
+OPENSSL_OBJS = OpenSSL.o
+OPENSSL_LIB = openssl/lib/libcrypto.a
+
+$(OPENSSL_LIB):
+	cd openssl; tar -xzf openssl-1.1.0e.tar.gz
+	cd openssl/openssl-1.1.0e; ./config --prefix=`pwd`/.. --openssldir=`pwd`/.. no-shared
+	cd openssl/openssl-1.1.0e; make
+	cd openssl/openssl-1.1.0e; make install_sw	
+
+$(OPENSSL_OBJS): CXXFLAGS += -Iopenssl/include 
+
+OBJS += $(OPENSSL_OBJS) $(OPENSSL_LIB)
 
 
 #MBED_LIB = mbedtls/mbedtls-2.4.2/library/libmbedcrypto.a
