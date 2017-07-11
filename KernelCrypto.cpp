@@ -70,13 +70,13 @@ static std::vector<uint_8> DoKernelSymmetric ( const char* name, std::vector<uin
 
 	std::vector<uint_8> output ( input.size() );
 	
-	trigger.Raise();
+	trigger->Raise();
 	int ret = sendmsg(sockfd2, &msg, 0/*flags*/);
 	if ( ret != input.size() )
 		error_at_line ( 1, 0, __FILE__, __LINE__, "sendmesg error" ); 
 
         int ret3 = read (sockfd2, output.data(), output.size() );
-	trigger.Lower();
+	trigger->Lower();
 
 	if ( ret3 != output.size() )
 		error_at_line ( 1, 0, __FILE__, __LINE__, "read error" ); 
@@ -84,7 +84,7 @@ static std::vector<uint_8> DoKernelSymmetric ( const char* name, std::vector<uin
 
 }
  
-std::vector<uint_8> KernelCrypto::DoDES ( std::vector<uint_8> const& input, std::vector<uint_8> const& key, FLAGS flags )
+std::vector<uint_8> KernelCrypto::DoDES ( std::vector<uint_8> const& input, std::vector<uint_8> const& key, FLAGS& flags )
 {
 	if ( key.size() == 8 )	
 		return DoKernelSymmetric ( "ecb(des)", input, key, flags );
@@ -99,7 +99,7 @@ std::vector<uint_8> KernelCrypto::DoDES ( std::vector<uint_8> const& input, std:
 }
 
 
-std::vector<uint_8> KernelCrypto::DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const & key, FLAGS flags )
+std::vector<uint_8> KernelCrypto::DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const & key, FLAGS& flags )
 {
 	return DoKernelSymmetric ( "ecb(aes)", input, key, flags );
 }

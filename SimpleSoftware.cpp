@@ -5,7 +5,7 @@
 #include "Trigger.h"
 #include <stdio.h>
 
-std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> const& input2, std::vector<uint_8>const& key, FLAGS flags )
+std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> const& input2, std::vector<uint_8>const& key, FLAGS& flags )
 {
     // Sanity checks
     if (( input2.size() % 8 ) != 0 )
@@ -42,7 +42,7 @@ std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> co
     {
     	uint64_t data = be64toh(*(uint64_t*)input);
 
-	trigger.Raise();
+	trigger->Raise();
 
         // Initial permutation
         Permutation(&data, true);
@@ -69,7 +69,7 @@ std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> co
         // Final permutation
         Permutation(&data, false);
 	
-	trigger.Lower();
+	trigger->Lower();
 
         // Write output
     	*(uint64_t*)output = htobe64(data);
@@ -79,6 +79,6 @@ std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> co
 }
 
 
-std::vector<uint_8> SimpleSoftwareImplementation::DoAES ( std::vector<uint_8>const& input, std::vector<uint_8> const& key, FLAGS flags )
+std::vector<uint_8> SimpleSoftwareImplementation::DoAES ( std::vector<uint_8>const& input, std::vector<uint_8> const& key, FLAGS& flags )
 {
 }

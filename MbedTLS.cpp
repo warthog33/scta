@@ -8,14 +8,16 @@
 
 #include "mbedtls/des.h"
 #include "mbedtls/aes.h"
-#include "mbedtls/pk.h"
+#include "mbedtls/pk.h" 
 
-std::vector<uint_8> MbedTLSImplementation::DoDES ( std::vector<uint_8> const& input, std::vector<uint_8> const& key, FLAGS flags )
+std::vector<uint_8> MbedTLSImplementation::DoDES ( std::vector<uint_8> const& input, std::vector<uint_8> const& key, FLAGS& flags )
 {
 	if ( key.size() != 8 && key.size() != 16 && key.size() != 24 )
 		error_at_line ( 1, 0, __FILE__, __LINE__,  "Invalid key len");
 	if (( input.size() % 8 ) != 0 )
-		error (1, 0, "Data len not a multiple of 8" );
+		error_at_line (1, 0, __FILE__, __LINE__, "Data len not a multiple of 8" );
+	if (( flags & ( ENCRYPT | DECRYPT )) == 0 )
+		flags = (FLAGS)( flags | ENCRYPT );
 
 	std::vector<uint_8> output ( input.size());
 	if ( key.size() == 8 )
@@ -28,10 +30,10 @@ std::vector<uint_8> MbedTLSImplementation::DoDES ( std::vector<uint_8> const& in
 	
 		for ( int offset = 0; offset < input.size(); offset+=8 )	
 		{
-			trigger.Raise();
+			trigger->Raise();
 			if ( mbedtls_des_crypt_ecb ( &ctx, input.data()+offset, output.data()+offset ) != 0 )
 				error_at_line ( 1, 0, __FILE__, __LINE__, "mbedtls_des_crypt_ecb returned error" );	
-			trigger.Lower();
+			trigger->Lower();
 		}
 	}	
 	else if ( key.size() == 16 || key.size() == 24 )
@@ -44,10 +46,10 @@ std::vector<uint_8> MbedTLSImplementation::DoDES ( std::vector<uint_8> const& in
 			
 		for ( int offset = 0; offset < input.size();  offset+=8 )	
 		{
-			trigger.Raise();
+			trigger->Raise();
 			if ( mbedtls_des3_crypt_ecb ( &ctx, input.data()+offset, output.data()+offset ) != 0 )
 				error_at_line ( 1, 0, __FILE__, __LINE__, "mbedtls_des3_crypt_ecb returned error" );	
-			trigger.Lower();
+			trigger->Lower();
 		}
 	}
 	return output;
@@ -55,12 +57,14 @@ std::vector<uint_8> MbedTLSImplementation::DoDES ( std::vector<uint_8> const& in
 
 
 
-std::vector<uint_8> MbedTLSImplementation::DoAES ( std::vector<uint_8>const& input, std::vector<uint_8>const& key, FLAGS flags )
+std::vector<uint_8> MbedTLSImplementation::DoAES ( std::vector<uint_8>const& input, std::vector<uint_8>const& key, FLAGS& flags )
 {
 	if ( key.size() != 16 && key.size() != 24 && key.size() != 32)
 		error_at_line ( 1, 0, __FILE__, __LINE__,  "Invalid key len");
 	if (( input.size() % 16 ) != 0 )
-		error (1, 0, "Data len not a multiple of 8" );
+		error_at_line (1, 0, __FILE__, __LINE__, "Data len %i not a multiple of 16", (int)input.size() );
+	if (( flags & ( ENCRYPT | DECRYPT )) == 0 )
+		flags = (FLAGS)( flags | ENCRYPT );
 
 	std::vector<uint_8> output(input.size());
 
@@ -72,10 +76,10 @@ std::vector<uint_8> MbedTLSImplementation::DoAES ( std::vector<uint_8>const& inp
 			
 	for ( int offset = 0; offset < input.size(); offset+=16 )	
 	{
-		trigger.Raise();
+		trigger->Raise();
 		if ( mbedtls_aes_crypt_ecb ( &ctx, MBEDTLS_AES_ENCRYPT, input.data()+offset, output.data()+offset ) != 0 )
 			error_at_line ( 1, 0, __FILE__, __LINE__, "mbedtls_aes_crypt_ecb returned error" );	
-		trigger.Lower();
+		trigger->Lower();
 	}
 	return output;
 }
@@ -88,34 +92,12 @@ int GetRandomNumbers ( void* parameter, unsigned char* output, size_t numbytes )
 }
 
 
-std::vector<uint_8> MbedTLSImplementation::DoRSA ( std::vector<uint_8>const& input, const char* privateKey, FLAGS flags )
-{
-	//mbedtls_pk_context pk;
-	
-	//mbedtls_pk_init ( &pk );
-	int rc;
-	mbedtls_rsa_context ctx;
-	mbedtls_rsa_init ( &ctx, MBEDTLS_RSA_PKCS_V15, MBEDTLS_RSA_PKCS_V21 );
 
-	if ( privateKey == NULL )	
-	{
-		srand(0);
-		rc = mbedtls_rsa_gen_key ( &ctx, GetRandomNumbers, 0, input.size()*8/*bits*/, 65537 );
-		if ( rc != 0 )
-			error_at_line ( 1, 0, __FILE__, __LINE__, "mbedtls_rsa_gen_key returned error" );
-	}
-	else
-	{
-		mbedtls_pk_context pkctx;
-		mbedtls_pk_init (&pkctx );
-		rc = mbedtls_pk_parse_keyfile ( &pkctx, privateKey, "" );
-		if ( rc != 0 )
-			error_at_line ( 1, 0, __FILE__, __LINE__, "mbedtls_pk_parse_keyfile returned error %x", -rc );
-	}
-
+static std::vector<uint_8> DoRSA (std::vector<uint_8>const& input, mbedtls_rsa_context ctx, FLAGS& flags )
+{ 	
 	std::vector<uint_8> output(input.size());
 
-	rc = mbedtls_rsa_private ( &ctx, GetRandomNumbers, 0, input.data(), output.data() );
+	int rc = mbedtls_rsa_private ( &ctx, GetRandomNumbers, 0, input.data(), output.data() );
 
 	char N[2000], E[2000], D[2000], P[2000], Q[2000], DP[2000], DQ[2000], QP[2000] ;
 	size_t olen;
@@ -137,4 +119,38 @@ std::vector<uint_8> MbedTLSImplementation::DoRSA ( std::vector<uint_8>const& inp
 	printf ( "DQ=(%lu) %s\n", olen, DQ );
 	printf ( "QP=(%lu) %s\n", olen, QP );
 	return output;
+}
+std::vector<uint_8> MbedTLSImplementation::DoRSA_ned ( std::vector<uint_8>const& input, std::vector<uint_8>& n, std::vector<uint_8>& e, std::vector<uint_8>& d, FLAGS& flags )
+{
+}
+std::vector<uint_8> MbedTLSImplementation::DoRSA_epq ( std::vector<uint_8>const& input, std::vector<uint_8>& e, std::vector<uint_8>& p, std::vector<uint_8>& q, FLAGS& flags )
+{
+}
+std::vector<uint_8> MbedTLSImplementation::DoRSA_KeyGen ( std::vector<uint_8>const& input, int numbits, FLAGS& flags )
+{
+	int rc;
+	mbedtls_rsa_context ctx;
+	srand(0);
+	rc = mbedtls_rsa_gen_key ( &ctx, GetRandomNumbers, 0, input.size()*8, 65537 );
+	if ( rc != 0 )
+		error_at_line ( 1, 0, __FILE__, __LINE__, "mbedtls_rsa_gen_key returned error" );
+	
+	return DoRSA(input, ctx, flags);
+}
+std::vector<uint_8> MbedTLSImplementation::DoRSA_KeyFile ( std::vector<uint_8>const& input, const char* keyFile, FLAGS& flags )
+{
+	//mbedtls_pk_context pk;
+	
+	//mbedtls_pk_init ( &pk );
+	int rc;
+	mbedtls_rsa_context ctx;
+	mbedtls_rsa_init ( &ctx, MBEDTLS_RSA_PKCS_V15, MBEDTLS_RSA_PKCS_V21 );
+
+	mbedtls_pk_context pkctx;
+	mbedtls_pk_init (&pkctx );
+	rc = mbedtls_pk_parse_keyfile ( &pkctx, keyFile, "" );
+	if ( rc != 0 )
+		error_at_line ( 1, 0, __FILE__, __LINE__, "mbedtls_pk_parse_keyfile returned error %x", -rc );
+	
+	return DoRSA(input, ctx, flags);
 }
