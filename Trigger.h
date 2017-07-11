@@ -3,18 +3,17 @@
 class Trigger
 {
 public:
-	Trigger()
-	{
-		printf ( "Initialising trigger\n" );
-	}
-	void Raise()
-	{
-		printf ( "Trigger.Raise() called\n" );
-	}
-	void Lower()
-	{
-		printf ( "Trigger.Lower() called\n" );
-	}
+	Trigger() {}
+	void Init () {}
+	void Raise() {}
+	void Lower() {}
 };
 
-extern Trigger trigger;
+class StdOutTrigger: public Trigger
+{
+public:
+	void Raise();
+	void Lower();
+};
+
+extern Trigger* trigger;
