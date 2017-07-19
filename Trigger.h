@@ -4,9 +4,9 @@ class Trigger
 {
 public:
 	Trigger() {}
-	void Init () {}
-	void Raise() {}
-	void Lower() {}
+	virtual void Init () {}
+	virtual void Raise() {}
+	virtual void Lower() {}
 };
 
 class StdOutTrigger: public Trigger
@@ -16,4 +16,20 @@ public:
 	void Lower();
 };
 
+class BeagleBoneTrigger: public Trigger
+{
+public:
+	void Init();
+	void Raise();
+	void Lower();
+};
+class SysGpioTrigger: public Trigger
+{
+public:
+	SysGpioTrigger();
+	void Raise();
+	void Lower();
+private:
+	int valuefd;
+};
 extern Trigger* trigger;

@@ -42,6 +42,8 @@ std::ostream& operator << ( std::ostream& os, FLAGS flags )
 		os << " Decrypt";	
 	if ( flags & CRT )
 		os << " CRT";	
+	if ( flags & RUN_TWICE )
+		os << " RunTwice";	
 	return os;
 }
 std::vector<uint_8>  StringToByteArray ( char* string )
@@ -50,6 +52,10 @@ std::vector<uint_8>  StringToByteArray ( char* string )
 	if ( sscanf ( string, "Ones%u", &v ) == 1 )
 	{
 		return std::vector<uint_8> ( v/8, 0x11 );
+	}
+	if ( sscanf ( string, "Zeros%u", &v ) == 1 )
+	{
+		return std::vector<uint_8> ( v/8, 0 );
 	}
 	if ( sscanf ( string, "Zeroes%u", &v ) == 1 )
 	{
@@ -78,13 +84,17 @@ void PrintUsage()
 	printf ( "    -n<modulus> is string of hexadecimal characters for use with RSA\n" );
 	printf ( "    -d<exponent> is string of hexadecimal characters for use with RSA\n" );
 	printf ( "    -e<exponent> is string of hexadecimal characters for use with RSA\n" );
+	printf ( "    -p<prime1> is string of hexadecimal characters for use with RSA\n" );
+	printf ( "    -q<prime2> is string of hexadecimal characters for use with RSA\n" );
+	printf ( "    -b<number> is decimal string representing key size for use with RSA_gen\n" );
 	printf ( "    -i<input> is string of hexadecimal characters, length must be multiple of block size of cipher\n" );
 	printf ( "           can be one of the following formats: Zeros<numbits>, Ones<numbits> or FFs<numbits>\n" );
-	printf ( "    -a<algorithm> currently supported include DES, AES and RSA\n" );
+	printf ( "    -a<algorithm> currently supported include DES, AES, RSA_ned, RSA_epq\n" );
 	printf ( "    -m<implementation> currently supported: mbedtls, openssl, SimpleSoftware, WolfCrypt  \n" );
 	printf ( "       TexasInstruments, TomCrypt, SmartCardAES (masked decryption only), KernelCrypto \n" );
-	printf ( "    -t<trigger> currently supported options include StdOut, BeagleBone (pin5 on BeagleBoneBlack) \n" );
-	printf ( "    -f<encrypt|decrypt|printintermediatevalues>\n" );
+	printf ( "    -t<trigger> currently supported options include StdOut, BeagleBone (pin5 on BeagleBoneBlack) or SysGpio(/sys/class/gpio/gpio60) \n" );
+	printf ( "    -f<encrypt|decrypt|printintermediatevalues~runtwice> flags, see below\n" );
+	printf ( "       runtwice: run the crypto twice, only triggering on the second operation to help with cache hits\n" );
 	printf ( "    -s Run Self tests \n" );
 	printf ( "Note:\n" );
 	printf ( "  RSA for TomCrypt does not do blinding, but does do CRT\n" );
@@ -105,7 +115,11 @@ int main (int argc, char** argv)
 {
 	std::vector<uint_8> key (defaultKey, defaultKey+sizeof(defaultKey));
 	std::vector<uint_8> input (defaultInput, defaultInput + sizeof(defaultInput)); 
-	std::vector<uint_8> n, d, e, p, q;
+	std::vector<uint_8> n (default_n, default_n+sizeof(default_n));
+	std::vector<uint_8> d (default_d, default_d+sizeof(default_d));
+	std::vector<uint_8> e (default_e, default_e+sizeof(default_e));
+	std::vector<uint_8> p (default_p, default_p+sizeof(default_p));
+	std::vector<uint_8> q (default_q, default_q+sizeof(default_q));
 	const char* algorithm = "DES";
 	const char* keyFile = "";
 	CryptoImplementation* implementation = new MbedTLSImplementation();
@@ -113,7 +127,7 @@ int main (int argc, char** argv)
 	int numbits = 0;
 
 	int c;
-	while ((c = getopt (argc, argv, "k:n:d:e:f:i:a:m:t:shp:")) != -1)
+	while ((c = getopt (argc, argv, "k:n:d:e:f:i:a:m:t:shp:q:b:")) != -1)
     		switch (c)
       		{
 		case 'b':
@@ -141,7 +155,10 @@ int main (int argc, char** argv)
         	 algorithm = optarg;
         	 break;
 		case 'p':
-		 keyFile = optarg;
+		 p = StringToByteArray(optarg);
+		 break;
+		case 'q':
+		 q = StringToByteArray(optarg);
 		 break;
       		case 'm':
 		  if ( strcasecmp ( optarg, "mbedtls" ) == 0 )
@@ -150,8 +167,8 @@ int main (int argc, char** argv)
 			implementation = new OpenSSL();
 		  else if ( strcasecmp ( optarg, "SimpleSoftware" ) == 0 )
 			implementation = new SimpleSoftwareImplementation();
-		  //else if ( strcasecmp ( optarg, "WolfCrypt" ) == 0 ) 
-		//	implementation = new WolfCrypt();
+		  else if ( strcasecmp ( optarg, "WolfCrypt" ) == 0 ) 
+			implementation = new WolfCrypt();
 		  else if ( strcasecmp ( optarg, "TexasInstruments" ) == 0 )
 			implementation = new TexasInstrumentsImplementation();
 		  else if ( strcasecmp ( optarg, "TomCrypt" ) == 0 )
@@ -172,12 +189,18 @@ int main (int argc, char** argv)
 			flags = (FLAGS)(flags | DECRYPT);
 		 else if ( strcasecmp ( optarg, "printintermediatevalues" ) == 0 )
 			flags = (FLAGS)(flags | PRINT_INTERMEDIATE_VALUES);
+		 else if ( strcasecmp ( optarg, "runtwice" ) == 0 )
+			flags = (FLAGS)(flags | RUN_TWICE);
+		 else
+			error_at_line (1, 0, __FILE__, __LINE__, "Unknown flag %s", optarg );
 		 break;	
 		case 't':
 		 if ( strcasecmp ( optarg, "stdout" ) == 0 )
 			trigger = new StdOutTrigger();
 		 else if ( strcasecmp ( optarg, "beaglebone" ) == 0 )
 			trigger = new BeagleBoneTrigger();
+		 else if ( strcasecmp ( optarg, "sysgpio" ) == 0 )
+			trigger = new SysGpioTrigger();
 		 else
 			error_at_line ( 1, 0, __FILE__, __LINE__, "Unknown trigger type %s", optarg );	
 		 break;
@@ -188,12 +211,12 @@ int main (int argc, char** argv)
 
 	}	
 
-	
+	trigger->Init();	
 	std::vector<uint_8> output;
 	if ( strcasecmp ( algorithm, "DES" ) == 0 ) 
-		output = implementation->DoDESWithLogging ( input, key );
+		output = implementation->DoDESWithLogging ( input, key, flags );
 	else if ( strcasecmp ( algorithm, "AES" ) == 0 ) 
-		output = implementation->DoAESWithLogging ( input, key );
+		output = implementation->DoAESWithLogging ( input, key, flags );
 	else if ( strcasecmp ( algorithm, "RSA_ned" ) == 0 ) 
 		output = implementation->DoRSA_ned_WithLogging ( input, n, e, d, flags );
 	else if ( strcasecmp ( algorithm, "RSA_epq" ) == 0 ) 

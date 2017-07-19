@@ -1,6 +1,11 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <stdlib.h>
+#include <string>
+#include <sys/types.h>
+#include <error.h>
+#include <unistd.h>
+#include <errno.h>
 
 #include "Trigger.h"
 
@@ -26,7 +31,7 @@ static unsigned* pinconf1;
 void BeagleBoneTrigger::Init()
 {
  	int fd = open("/dev/mem",O_RDWR | O_SYNC);
-
+	
 	if ( fd <= 0 )
 	{
 		printf ( "Unable to open /dev/mem, aborting\n" );
@@ -47,4 +52,37 @@ void BeagleBoneTrigger::Raise(){
 void BeagleBoneTrigger::Lower(){
         pinconf1[GPIO_DATAOUT/4] ^= (1<<28);
         //sleep(1);
+}
+
+SysGpioTrigger::SysGpioTrigger()
+{
+#define PORT_PIN_DIR  "/sys/class/gpio/gpio60/"
+	const char* directionFilename = PORT_PIN_DIR "direction";
+	const char* valueFilename = PORT_PIN_DIR "value";
+
+	int directionfd = open ( directionFilename, O_WRONLY );
+	if ( directionfd < 0 )
+		error_at_line ( 1, 0, __FILE__, __LINE__, "open %s returned error %i", directionFilename, directionfd );
+
+	int rc = write ( directionfd, "out", 3 );
+	if ( rc != 3  )
+		error_at_line ( 1, 0, __FILE__, __LINE__, "write returned error %i rc=%i", errno, rc );
+
+	valuefd = open ( valueFilename, O_WRONLY );
+	if ( valuefd < 0 )
+		error_at_line ( 1, 0, __FILE__, __LINE__, "open %s returned error %i", valueFilename, valuefd );
+	
+}
+
+void SysGpioTrigger::Raise() 
+{
+	int rc = write ( valuefd, "1", 1 );	
+	if ( rc != 1 )
+		error_at_line ( 1, 0, __FILE__, __LINE__, "write returned erro %i fd=%i errno=%i", rc, valuefd, errno );
+}
+void SysGpioTrigger::Lower() 
+{
+	int rc = write ( valuefd, "0", 1 );
+	if ( rc != 1 )
+		error_at_line ( 1, 0, __FILE__, __LINE__, "write returned erro %i", rc );
 }

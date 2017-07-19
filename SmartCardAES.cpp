@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <memory.h>
 #include "Trigger.h"
+#include <errno.h>
 
 extern "C" {
 #include "smartcard-aes-fw-master/inv_aes.h"
@@ -27,7 +28,24 @@ std::vector<uint_8> SmartCardAES::DoAES ( std::vector<uint_8>const& input, std::
 	
 	flags = (FLAGS)(flags | DECRYPT );
 
+	unsigned int seed;
+
+	FILE* f = fopen("/dev/random", "rb" );
+	if ( f == NULL )
+		error_at_line(1,0,__FILE__,__LINE__, "unable to open /dev/random errno=%i", errno );
+	if ( fread ( &seed, sizeof(seed), 1, f) != 1)
+		error_at_line(1,0,__FILE__,__LINE__, "unable to read from /dev/random" );	
+	fclose (f);
+
+	srand (seed);
 	std::vector<uint_8> output = input;
+
+	if ( flags & RUN_TWICE )
+	{
+		unsigned char zeros[16] = { 0 };
+		inv_aes128 ( zeros ); 
+	}
+
 	
 	for ( int offset = 0; offset < input.size(); offset+=16 )	
 	{

@@ -58,7 +58,6 @@ std::vector<uint_8> WolfCrypt::DoDES ( std::vector<uint_8> const& input, std::ve
 	return output;
 }
 
-
 std::vector<uint_8> WolfCrypt::DoAES ( std::vector<uint_8>const& input, std::vector<uint_8> const& key, FLAGS& flags )
 {
 	if ( key.size() != 16 && key.size() != 24 && key.size() != 32)
@@ -79,19 +78,39 @@ std::vector<uint_8> WolfCrypt::DoAES ( std::vector<uint_8>const& input, std::vec
 	trigger->Lower();
 	return output;
 }
+static std::vector<uint_8> WolfCryptDoRSA ( std::vector<uint_8> const& input, RsaKey& key, FLAGS flags )
+{
+	RNG rng;
+	std::vector<uint_8> output (wc_RsaEncryptSize(&key));
+	int rc;
+
+	rc =  wc_InitRng (&rng );
+	if ( rc != 0 )
+		error_at_line ( 1, 0, __FILE__, __LINE__, "wc_InitRng error" );
+
+	//rc = wc_RsaPublicEncrypt(input.data(), input.size()/2, output.data(), output.size(), &rsakey, &rng);
+	word32 outlen = output.size();
+
+	if ( flags & RUN_TWICE )
+		wc_RsaFunction ( input.data(), input.size(), output.data(), &outlen, flags & ENCRYPT ? RSA_PUBLIC_ENCRYPT : RSA_PRIVATE_DECRYPT, &key, &rng); 
+
+	trigger->Raise();
+	rc = wc_RsaFunction ( input.data(), input.size(), output.data(), &outlen, flags & ENCRYPT ? RSA_PUBLIC_ENCRYPT : RSA_PRIVATE_DECRYPT, &key, &rng); 
+	trigger->Lower();
+	if ( rc < 0 )
+		error_at_line ( 1, 0, __FILE__, __LINE__, "wc_RsaFunction returned error %i", rc );
+	
+	return output;
+}
+
 std::vector<uint_8> WolfCrypt::DoRSA_ned ( std::vector<uint_8> const& input, std::vector<uint_8>& n, std::vector<uint_8>& e, std::vector<uint_8>& d, FLAGS& flags )
 {
 	RsaKey rsakey;
-	RNG rng;
 	int rc;
 
 	rc = wc_InitRsaKey ( &rsakey, NULL );
 	if ( rc != 0 )
 		error_at_line ( 1, 0, __FILE__, __LINE__, "wc_InitRsaKey returned error" );
-
-	rc =  wc_InitRng (&rng );
-	if ( rc != 0 )
-		error_at_line ( 1, 0, __FILE__, __LINE__, "wc_InitRng error" );
 
 	rc = wc_RsaPublicKeyDecodeRaw(n.data(), n.size(), (flags & ENCRYPT) ? e.data() : d.data(), (flags & ENCRYPT) ? e.size() : d.size(), &rsakey);
 	if ( rc != 0 )
@@ -101,14 +120,7 @@ std::vector<uint_8> WolfCrypt::DoRSA_ned ( std::vector<uint_8> const& input, std
 	//if ( mp_read_unsigned_bin(&rsakey.d, d.data(), d.size()) != 0 )
 	//	error_at_line ( 1, 0, __FILE__, __LINE__, "unable to import d" );
 
-	std::vector<uint_8> output (input.size());
-	//rc = wc_RsaPublicEncrypt(input.data(), input.size()/2, output.data(), output.size(), &rsakey, &rng);
-	word32 outlen = output.size();
-	rc = wc_RsaFunction ( input.data(), input.size(), output.data(), &outlen, RSA_PUBLIC_ENCRYPT, &rsakey, &rng); 
-	if ( rc < 0 )
-		error_at_line ( 1, 0, __FILE__, __LINE__, "wc_RsaFunction returned error %i", rc );
-	
-	return output;
+	return WolfCryptDoRSA ( input, rsakey, flags );
 }
 
 
@@ -144,14 +156,6 @@ std::vector<uint_8> WolfCrypt::DoRSA_epq ( std::vector<uint_8> const& input, std
         if (( rc = mp_invmod(&key.q, &key.p, &key.u  )) != 0 ) { error_at_line(1,0,__FILE__,__LINE__, "mp_invmod returned error" ); }
 	
 	key.type = RSA_PRIVATE;
-
-	std::vector<uint_8> output (wc_RsaEncryptSize(&key));
-	word32 outlen = output.size();
-
-	rc = wc_RsaFunction ( input.data(), input.size(), output.data(), &outlen, flags & ENCRYPT ? RSA_PUBLIC_ENCRYPT : RSA_PRIVATE_DECRYPT, &key, &rng); 
-	if ( rc < 0 )
-		error_at_line ( 1, 0, __FILE__, __LINE__, "wc_RsaFunction returned error %i", rc );
-
-	return output;
+	return WolfCryptDoRSA ( input, key, flags);
 }
 

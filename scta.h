@@ -12,6 +12,7 @@ typedef enum
 	DECRYPT = 2,
 	CRT     = 4,
 	PRINT_INTERMEDIATE_VALUES = 0x8,
+	RUN_TWICE = 0x10,
 } FLAGS;
 
 //std::string Log ( std::vector<uint_8>const & v );

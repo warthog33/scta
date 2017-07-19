@@ -28,6 +28,9 @@ std::vector<uint_8> MbedTLSImplementation::DoDES ( std::vector<uint_8> const& in
 		if ( mbedtls_des_setkey_enc ( &ctx, key.data() ) != 0 )
 			error_at_line ( 1, 0, __FILE__, __LINE__, "mbedtls_des_setkey_enc returned error " );
 	
+		if ( flags & RUN_TWICE )
+			mbedtls_des_crypt_ecb ( &ctx, output.data(), output.data());
+
 		for ( int offset = 0; offset < input.size(); offset+=8 )	
 		{
 			trigger->Raise();
@@ -44,6 +47,9 @@ std::vector<uint_8> MbedTLSImplementation::DoDES ( std::vector<uint_8> const& in
 		if ( (key.size() == 16 ? mbedtls_des3_set2key_enc : mbedtls_des3_set3key_enc)(&ctx, key.data() ) != 0 )
 			error_at_line ( 1, 0, __FILE__, __LINE__, "mbedtls_des3_set2/3key_enc returned error" );
 			
+		if ( flags & RUN_TWICE )
+			mbedtls_des3_crypt_ecb ( &ctx, output.data(), output.data());
+
 		for ( int offset = 0; offset < input.size();  offset+=8 )	
 		{
 			trigger->Raise();
@@ -122,9 +128,11 @@ static std::vector<uint_8> DoRSA (std::vector<uint_8>const& input, mbedtls_rsa_c
 }
 std::vector<uint_8> MbedTLSImplementation::DoRSA_ned ( std::vector<uint_8>const& input, std::vector<uint_8>& n, std::vector<uint_8>& e, std::vector<uint_8>& d, FLAGS& flags )
 {
+	error_at_line(1,0,__FILE__,__LINE__,"Not implemented");
 }
 std::vector<uint_8> MbedTLSImplementation::DoRSA_epq ( std::vector<uint_8>const& input, std::vector<uint_8>& e, std::vector<uint_8>& p, std::vector<uint_8>& q, FLAGS& flags )
 {
+	error_at_line(1,0,__FILE__,__LINE__,"Not implemented");
 }
 std::vector<uint_8> MbedTLSImplementation::DoRSA_KeyGen ( std::vector<uint_8>const& input, int numbits, FLAGS& flags )
 {

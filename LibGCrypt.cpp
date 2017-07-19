@@ -42,7 +42,10 @@ std::vector<uint_8> LibGCrypt::DoDES ( std::vector<uint_8> const& input, std::ve
 	std::vector<uint_8> output ( input.size());
 	if (( flags & ( ENCRYPT | DECRYPT )) == 0  ) 
 		flags = (FLAGS)(flags | ENCRYPT);
-	
+
+	if ( flags & RUN_TWICE )	
+		rc = (flags & ENCRYPT ? gcry_cipher_encrypt : gcry_cipher_decrypt ) ( hdt, output.data(), output.size(), input.data(), input.size() );	
+
 	trigger->Raise();
 	rc = (flags & ENCRYPT ? gcry_cipher_encrypt : gcry_cipher_decrypt ) ( hdt, output.data(), output.size(), input.data(), input.size() );	
 	trigger->Lower();
@@ -118,6 +121,9 @@ static std::vector<uint_8> DoRSA2 ( std::vector<uint_8>const& input, gcry_sexp_t
 		error_at_line ( 1, 0, __FILE__, __LINE__, "gcry_sexp_build returned error" );
 	gcry_sexp_t output_parms;
 
+	if ( flags & RUN_TWICE )	
+		(flags & ENCRYPT ? gcry_pk_encrypt : gcry_pk_decrypt) ( &output_parms, input_parms, rsa_key ); 
+
 	trigger->Raise();
 	rc = (flags & ENCRYPT ? gcry_pk_encrypt : gcry_pk_decrypt) ( &output_parms, input_parms, rsa_key ); 
 	trigger->Lower();
@@ -145,8 +151,9 @@ std::vector<uint_8> LibGCrypt::DoRSA_KeyGen ( std::vector<uint_8>const& input, i
 {
 	gcry_sexp_t rsa_parms;
 	gcry_sexp_t rsa_key;	
-	
-	gcry_error_t rc = gcry_sexp_build(&rsa_parms, NULL, "(genkey (rsa (nbits 4:1024)))");	
+
+	printf ( "numbits=%i\n", numbits );
+	gcry_error_t rc = gcry_sexp_build(&rsa_parms, NULL, "(genkey (rsa (nbits %d)))", numbits);	
 	if ( rc != 0 )
 		error_at_line ( 1, 0, __FILE__, __LINE__, "gcry_sexpt_t returned error" );
 

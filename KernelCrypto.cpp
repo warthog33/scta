@@ -44,42 +44,48 @@ static std::vector<uint_8> DoKernelSymmetric ( const char* name, std::vector<uin
         if ( sockfd2 == -1 )
 	        error_at_line ( 1, 0, __FILE__, __LINE__,  "accept error=%i\n", errno );
 
-        struct iovec msg_iov = {
-                /*.iov_base =*/ (void*)input.data(),
-                /*.iov_len =*/ (size_t)input.size(),
-        };
-
-        uint_32 msg_control = ALG_OP_ENCRYPT;
-        char cmsgbuf[CMSG_SPACE(sizeof(msg_control))];
-
-        struct msghdr msg = {
-                /*.msg_name =*/ NULL,
-                /*.msg_namelen =*/ 0,
-                /*.msg_iov =*/ &msg_iov,
-                /*.msg_iovlen =*/ 1,
-                /*.msg_control =*/ cmsgbuf,
-                /*.msg_controllen =*/ sizeof(cmsgbuf),
-                /*.msg_flags =*/ ALG_OP_ENCRYPT,
-        };
-
-        struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
-        cmsg->cmsg_level = SOL_ALG;
-        cmsg->cmsg_type = ALG_SET_OP;
-        cmsg->cmsg_len = CMSG_LEN(sizeof(msg_control));
-        memcpy ( CMSG_DATA(cmsg), &msg_control, sizeof(msg_control));
 
 	std::vector<uint_8> output ( input.size() );
+	//int requestsize = 16;
+
+	for ( int i = 0; i < 2; i++ /*i+=requestsize*/ )
+	{
+        	struct iovec msg_iov = {
+                	/*.iov_base =*/ (void*)(input.data()),
+                	/*.iov_len =*/ (size_t)input.size(),
+        	};
+
+        	uint_32 msg_control = ALG_OP_ENCRYPT;
+        	char cmsgbuf[CMSG_SPACE(sizeof(msg_control))];
+
+        	struct msghdr msg = {
+                	/*.msg_name =*/ NULL,
+                	/*.msg_namelen =*/ 0,
+                	/*.msg_iov =*/ &msg_iov,
+                	/*.msg_iovlen =*/ 1,
+                	/*.msg_control =*/ cmsgbuf,
+                	/*.msg_controllen =*/ sizeof(cmsgbuf),
+                	/*.msg_flags =*/ ALG_OP_ENCRYPT,
+        	};
+
+        	struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
+        	cmsg->cmsg_level = SOL_ALG;
+        	cmsg->cmsg_type = ALG_SET_OP;
+        	cmsg->cmsg_len = CMSG_LEN(sizeof(msg_control));
+        	memcpy ( CMSG_DATA(cmsg), &msg_control, sizeof(msg_control));
+
 	
-	trigger->Raise();
-	int ret = sendmsg(sockfd2, &msg, 0/*flags*/);
-	if ( ret != input.size() )
-		error_at_line ( 1, 0, __FILE__, __LINE__, "sendmesg error" ); 
+		trigger->Raise();
+		int ret = sendmsg(sockfd2, &msg, 0/*flags*/);
+		if ( ret != input.size() )
+			error_at_line ( 1, 0, __FILE__, __LINE__, "sendmesg error" ); 
 
-        int ret3 = read (sockfd2, output.data(), output.size() );
-	trigger->Lower();
+        	int ret3 = read (sockfd2, output.data(), output.size() );
+		trigger->Lower();
 
-	if ( ret3 != output.size() )
-		error_at_line ( 1, 0, __FILE__, __LINE__, "read error" ); 
+		if ( ret3 != output.size() )
+			error_at_line ( 1, 0, __FILE__, __LINE__, "read error ret=%i", ret3 ); 
+	}
 	return output;
 
 }
@@ -101,5 +107,6 @@ std::vector<uint_8> KernelCrypto::DoDES ( std::vector<uint_8> const& input, std:
 
 std::vector<uint_8> KernelCrypto::DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const & key, FLAGS& flags )
 {
-	return DoKernelSymmetric ( "ecb(aes)", input, key, flags );
+	//return DoKernelSymmetric ( "ecb(aes)", input, key, flags );
+	return DoKernelSymmetric ( "ecb-aes-omap", input, key, flags );
 }
