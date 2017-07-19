@@ -83,7 +83,7 @@ void PrintUsage()
 	printf ( "    -a<algorithm> currently supported include DES, AES and RSA\n" );
 	printf ( "    -m<implementation> currently supported: mbedtls, openssl, SimpleSoftware, WolfCrypt  \n" );
 	printf ( "       TexasInstruments, TomCrypt, SmartCardAES (masked decryption only), KernelCrypto \n" );
-	printf ( "    -t<trigger> currently supported options include StdOut  \n" );
+	printf ( "    -t<trigger> currently supported options include StdOut, BeagleBone (pin5 on BeagleBoneBlack) \n" );
 	printf ( "    -f<encrypt|decrypt|printintermediatevalues>\n" );
 	printf ( "    -s Run Self tests \n" );
 	printf ( "Note:\n" );
@@ -176,6 +176,8 @@ int main (int argc, char** argv)
 		case 't':
 		 if ( strcasecmp ( optarg, "stdout" ) == 0 )
 			trigger = new StdOutTrigger();
+		 else if ( strcasecmp ( optarg, "beaglebone" ) == 0 )
+			trigger = new BeagleBoneTrigger();
 		 else
 			error_at_line ( 1, 0, __FILE__, __LINE__, "Unknown trigger type %s", optarg );	
 		 break;
