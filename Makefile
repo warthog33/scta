@@ -4,11 +4,10 @@ scta:
 *.o: Makefile
 CC=gcc
 CXX = g++
-CFLAGS = -I. -g -std=c11
-CXXFLAGS = -I. -g
+CXXFLAGS = -g
 
 UNAME = $(shell /bin/uname -m)
-ifeq ($(UNAME),armv71)
+ifeq ($(UNAME),armv7l)
 	CFLAGS += -std=c11 
 endif
 ifeq ($(UNAME), x86_64)
@@ -48,7 +47,7 @@ $(MBED_LIB): mbedtls/mbedtls-2.4.2-apache.tgz
 	cd mbedtls/mbedtls-2.4.2; make install DESTDIR=`pwd`/..
 
 $(MBED_OBJS): $(MBED_LIB)
-$(MBED_OBJS): CXXFLAGS += -Imbedtls/mbedtls-2.4.2/include
+$(MBED_OBJS): CXXFLAGS += -Imbedtls/include
 
 OBJS += $(MBED_OBJS) $(MBED_LIB) $(MBED_OBJS)
 
