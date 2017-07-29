@@ -78,7 +78,7 @@ std::vector<uint_8> WolfCrypt::DoAES ( std::vector<uint_8>const& input, std::vec
 	trigger->Lower();
 	return output;
 }
-static std::vector<uint_8> WolfCryptDoRSA ( std::vector<uint_8> const& input, RsaKey& key, FLAGS flags )
+static std::vector<uint_8> WolfCryptDoRSA ( std::vector<uint_8> const& input, RsaKey& key, FLAGS flags, int mode )
 {
 	RNG rng;
 	std::vector<uint_8> output (wc_RsaEncryptSize(&key));
@@ -91,11 +91,13 @@ static std::vector<uint_8> WolfCryptDoRSA ( std::vector<uint_8> const& input, Rs
 	//rc = wc_RsaPublicEncrypt(input.data(), input.size()/2, output.data(), output.size(), &rsakey, &rng);
 	word32 outlen = output.size();
 
+	printf ( "outlen=%i\n", outlen );
+
 	if ( flags & RUN_TWICE )
 		wc_RsaFunction ( input.data(), input.size(), output.data(), &outlen, flags & ENCRYPT ? RSA_PUBLIC_ENCRYPT : RSA_PRIVATE_DECRYPT, &key, &rng); 
 
 	trigger->Raise();
-	rc = wc_RsaFunction ( input.data(), input.size(), output.data(), &outlen, flags & ENCRYPT ? RSA_PUBLIC_ENCRYPT : RSA_PRIVATE_DECRYPT, &key, &rng); 
+	rc = wc_RsaFunction ( input.data(), input.size(), output.data(), &outlen, mode, &key, &rng); 
 	trigger->Lower();
 	if ( rc < 0 )
 		error_at_line ( 1, 0, __FILE__, __LINE__, "wc_RsaFunction returned error %i", rc );
@@ -115,12 +117,12 @@ std::vector<uint_8> WolfCrypt::DoRSA_ned ( std::vector<uint_8> const& input, std
 	rc = wc_RsaPublicKeyDecodeRaw(n.data(), n.size(), (flags & ENCRYPT) ? e.data() : d.data(), (flags & ENCRYPT) ? e.size() : d.size(), &rsakey);
 	if ( rc != 0 )
 		error_at_line ( 1, 0, __FILE__, __LINE__, "wc_RsaPublicKeyDecodeRaw returned error %i", rc );
-	
+
 	// Add in private components of RSA key ....
 	//if ( mp_read_unsigned_bin(&rsakey.d, d.data(), d.size()) != 0 )
 	//	error_at_line ( 1, 0, __FILE__, __LINE__, "unable to import d" );
 
-	return WolfCryptDoRSA ( input, rsakey, flags );
+	return WolfCryptDoRSA ( input, rsakey, flags, RSA_PUBLIC_ENCRYPT );
 }
 
 
@@ -156,6 +158,6 @@ std::vector<uint_8> WolfCrypt::DoRSA_epq ( std::vector<uint_8> const& input, std
         if (( rc = mp_invmod(&key.q, &key.p, &key.u  )) != 0 ) { error_at_line(1,0,__FILE__,__LINE__, "mp_invmod returned error" ); }
 	
 	key.type = RSA_PRIVATE;
-	return WolfCryptDoRSA ( input, key, flags);
+	return WolfCryptDoRSA ( input, key, flags, RSA_PRIVATE_DECRYPT);
 }
 
