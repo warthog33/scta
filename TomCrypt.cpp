@@ -22,6 +22,9 @@ std::vector<uint_8> TomCrypt::DoDES ( std::vector<uint_8>const&  input, std::vec
 		symmetric_key ks;
 		if ( des_setup ( key.data(), key.size(), 16, &ks ) != 0 )
 			error_at_line ( 1, 0, __FILE__, __LINE__, "wc_Des_SetKey returned error" );
+		if ( flags & RUN_TWICE )
+			des_ecb_encrypt ( output.data(), output.data(), &ks );
+
 		for ( int offset=0; offset < input.size(); offset += 8 ) 
 		{
 			trigger->Raise();
@@ -36,6 +39,9 @@ std::vector<uint_8> TomCrypt::DoDES ( std::vector<uint_8>const&  input, std::vec
 		symmetric_key ks;
 		if ( des3_setup ( key.data(), key.size(), 0, &ks ) != 0 )
 			error_at_line ( 1, 0, __FILE__, __LINE__, "wc_Des_SetKey returned error" );
+		if ( flags & RUN_TWICE )
+			des3_ecb_encrypt ( output.data(), output.data(), &ks );
+
 		for ( int offset =0; offset < input.size(); offset += 8 ) 
 		{
 			trigger->Raise();
@@ -60,6 +66,8 @@ std::vector<uint_8> TomCrypt::DoAES ( std::vector<uint_8> const& input, std::vec
                 error_at_line ( 1, 0, __FILE__, __LINE__, "aes_setup returned error" );
 
 	std::vector<uint_8> output (input.size());
+	if ( flags & RUN_TWICE )
+        	aes_ecb_encrypt ( input.data(), output.data(), &ctx );
 	for ( int offset = 0; offset < input.size(); offset+=16 )
 	{
 		trigger->Raise();

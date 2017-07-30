@@ -69,8 +69,10 @@ class CryptoImplementation
 		std::cout << "RSA i=" << input << " o=" << output << " keyfile=" << keyfile << " " << GetName() << flags << std::endl; 
 		return output;
 	}	
-	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ) = 0 ; 
-	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ) = 0 ; 
+	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags )
+	{ return DoSymmetric ( "AES", input, key, flags ); } 
+	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags )
+	{ return DoSymmetric ( "DES", input, key, flags ); }
 	virtual std::vector<uint_8> DoSymmetric ( const char* name, std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ) 
 	{ error ( 1, 0, "Not Implemented" ); return std::vector<uint_8>(); }
 	virtual std::vector<uint_8> DoRSA_KeyGen ( std::vector<uint_8> const & input, int numbits, FLAGS& flags )
@@ -89,6 +91,7 @@ class SimpleSoftwareImplementation : public CryptoImplementation
 	virtual const char* GetName () { return "SimpleSoftware"; }
 	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
 	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
+	//virtual std::vector<uint_8> DoSymmetric ( const char* name, std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
 };
 class MbedTLSImplementation : public CryptoImplementation
 {
@@ -105,8 +108,9 @@ class LibGCrypt : public CryptoImplementation
 {
 	public:
 	virtual const char* GetName () { return "LibGCrypt"; }
-	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
-	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
+	//virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
+	//virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
+	virtual std::vector<uint_8> DoSymmetric ( const char* name, std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
 	virtual std::vector<uint_8> DoRSA_KeyGen ( std::vector<uint_8> const & input, int numbits, FLAGS& flags ); 
 	virtual std::vector<uint_8> DoRSA_ned ( std::vector<uint_8> const & input, std::vector<uint_8>& n, std::vector<uint_8>& e, std::vector<uint_8>& d, FLAGS& flags );
 	virtual std::vector<uint_8> DoRSA_epq ( std::vector<uint_8> const & input, std::vector<uint_8>& e, std::vector<uint_8>& p, std::vector<uint_8>& q, FLAGS& flags );
@@ -117,6 +121,7 @@ class TexasInstrumentsImplementation : public CryptoImplementation
 	virtual const char* GetName () { return "TexasInstruments"; }
 	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
 	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
+	//virtual std::vector<uint_8> DoSymmetric ( const char* name,  std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
 };
 class OpenSSL : public CryptoImplementation
 {
@@ -124,6 +129,7 @@ class OpenSSL : public CryptoImplementation
 	virtual const char* GetName () { return "OpenSSL"; }
 	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
 	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
+	//virtual std::vector<uint_8> DoSymmetric ( const char* name, std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
 };
 class SmartCardAES : public CryptoImplementation
 {
@@ -131,6 +137,7 @@ class SmartCardAES : public CryptoImplementation
 	virtual const char* GetName () { return "SmartCardAES"; }
 	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
 	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
+	//virtual std::vector<uint_8> DoSymmetric ( const char* name, std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
 };
 class WolfCrypt : public CryptoImplementation
 {
@@ -138,6 +145,7 @@ class WolfCrypt : public CryptoImplementation
 	virtual const char* GetName () { return "WolfCrypt"; }
 	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
 	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
+	//virtual std::vector<uint_8> DoSymmetric ( const char* name, std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
 	virtual std::vector<uint_8> DoRSA_ned ( std::vector<uint_8> const & input, std::vector<uint_8>& n, std::vector<uint_8>& e, std::vector<uint_8>& d, FLAGS& flags );
 	virtual std::vector<uint_8> DoRSA_epq ( std::vector<uint_8> const & input, std::vector<uint_8>& e, std::vector<uint_8>& p, std::vector<uint_8>& q, FLAGS& flags );
 };
@@ -147,6 +155,7 @@ class TomCrypt : public CryptoImplementation
 	virtual const char* GetName () { return "TomCrypt"; }
 	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
 	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
+	//virtual std::vector<uint_8> DoSymmetic ( const char* name, std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
 	virtual std::vector<uint_8> DoRSA_ned ( std::vector<uint_8> const & input, std::vector<uint_8>& n, std::vector<uint_8>& e, std::vector<uint_8>& d, FLAGS& flags );
 	virtual std::vector<uint_8> DoRSA_epq ( std::vector<uint_8> const & input, std::vector<uint_8>& e, std::vector<uint_8>& p, std::vector<uint_8>& q, FLAGS& flags );
 };

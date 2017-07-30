@@ -17,7 +17,10 @@ std::vector<uint_8> OpenSSL::DoDES ( std::vector<uint_8> const& input, std::vect
 	{
 		DES_key_schedule ks;
 		DES_set_key_unchecked ( (const_DES_cblock*)key.data(), &ks );
-			
+		
+		if ( flags & RUN_TWICE )	
+			DES_ecb_encrypt( (const_DES_cblock*)(output.data()), (DES_cblock*)(output.data()), &ks, DES_ENCRYPT );
+
 		for ( int offset = 0; offset < input.size(); offset+=8 )	
 		{
 			trigger->Raise();
@@ -32,6 +35,9 @@ std::vector<uint_8> OpenSSL::DoDES ( std::vector<uint_8> const& input, std::vect
 		DES_set_key_unchecked ( (const_DES_cblock*)key.data(), &ks1 );
 		DES_set_key_unchecked ( (const_DES_cblock*)(key.data()+8), &ks2 );
 		DES_set_key_unchecked ( (const_DES_cblock*)(key.data()+(key.size()==16?0:16)), &ks3 );
+
+		if ( flags & RUN_TWICE )
+			DES_ecb3_encrypt ( (const_DES_cblock*)(output.data()), (DES_cblock*)(output.data()), &ks1, &ks2, &ks3, DES_ENCRYPT );
 			
 		for ( int offset = 0; offset < input.size(); offset+=8 )	
 		{

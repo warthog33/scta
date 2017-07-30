@@ -26,6 +26,8 @@ std::vector<uint_8> WolfCrypt::DoDES ( std::vector<uint_8> const& input, std::ve
 		Des ks;
 		if ( wc_Des_SetKey ( &ks, key.data(), NULL, DES_ENCRYPTION ) != 0 )
 			error_at_line ( 1, 0, __FILE__, __LINE__, "wc_Des_SetKey returned error" );
+		if ( flags & RUN_TWICE )
+			wc_Des_EcbEncrypt ( &ks, output.data(), output.data(), output.size() );
 		trigger->Raise();
 		if ( wc_Des_EcbEncrypt ( &ks, output.data(), input.data(), input.size() ) !=  0 )
 			error_at_line ( 1, 0, __FILE__, __LINE__, "wc_Des_EcbEncrypt returned error" );
@@ -40,6 +42,8 @@ std::vector<uint_8> WolfCrypt::DoDES ( std::vector<uint_8> const& input, std::ve
 		memcpy (keycopy+16, key.data(), 8 );
 		if ( wc_Des3_SetKey ( &ks, keycopy, NULL, DES_ENCRYPTION ) != 0 )
 			error_at_line ( 1, 0, __FILE__, __LINE__, "wc_Des_SetKey returned error" );
+		if ( flags & RUN_TWICE )
+			wc_Des3_EcbEncrypt ( &ks, output.data(), output.data(), output.size() );
 		trigger->Raise();
 		if ( wc_Des3_EcbEncrypt ( &ks, output.data(), input.data(), input.size() ) !=  0 )
 			error_at_line ( 1, 0, __FILE__, __LINE__, "wc_Des_EcbEncrypt returned error" );
@@ -50,6 +54,8 @@ std::vector<uint_8> WolfCrypt::DoDES ( std::vector<uint_8> const& input, std::ve
 		Des3 ks;
 		if ( wc_Des3_SetKey ( &ks, key.data(), NULL, DES_ENCRYPTION ) != 0 )
 			error_at_line ( 1, 0, __FILE__, __LINE__, "wc_Des_SetKey returned error" );
+		if ( flags & RUN_TWICE )
+			wc_Des3_EcbEncrypt ( &ks, output.data(), output.data(), output.size() );
 		trigger->Raise();
 		if ( wc_Des3_EcbEncrypt ( &ks, output.data(), input.data(), input.size() ) !=  0 )
 			error_at_line ( 1, 0, __FILE__, __LINE__, "wc_Des_EcbEncrypt returned error" );
@@ -72,6 +78,9 @@ std::vector<uint_8> WolfCrypt::DoAES ( std::vector<uint_8>const& input, std::vec
                 error_at_line ( 1, 0, __FILE__, __LINE__, "wc_AesSetKey returned error" );
 
 	std::vector<uint_8> output(input.size());
+        if ( flags & RUN_TWICE )
+		wc_AesEcbEncrypt ( &ctx, output.data(), output.data(), output.size() );
+
 	trigger->Raise();
         if ( wc_AesEcbEncrypt ( &ctx, output.data(), input.data(), input.size() ) != 0 )
                 error_at_line ( 1, 0, __FILE__, __LINE__, "mbedtls_aes_crypt_ecb returned error" );

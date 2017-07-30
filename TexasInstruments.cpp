@@ -18,18 +18,24 @@ std::vector<uint_8> TexasInstrumentsImplementation::DoDES ( std::vector<uint_8>c
 		error_at_line ( 1, 0, __FILE__, __LINE__,  "Invalid key len");
 	if (( input.size() % 8 ) != 0 )
 		error (1, 0, "Data len not a multiple of 8" );
-
-	std::vector<uint_8> output = input;
+	
+	std::vector<uint_8> output;
 	des_ctx ctx;
 	if ( key.size() == 8 )
 	{
 		Des_Key ( &ctx, key.data(), EN0 );
+		if ( flags & RUN_TWICE )
+			Des_Enc ( &ctx, output.data(), 1 );
+		output = input;
 		trigger->Raise();
 		Des_Enc ( &ctx, output.data(), output.size()/8 );
 		trigger->Lower();
 	}	
 	else if ( key.size() == 16 || key.size() == 24 )
 	{
+		if ( flags & RUN_TWICE )
+			TripleDES_ENC ( &ctx, output.data(), 1, key.data(), key.data()+8, key.data() );
+		output = input;
 		trigger->Raise();	
 		TripleDES_ENC ( &ctx, output.data(), output.size()/8, key.data(), key.data()+8, key.data() + (key.size()==24?16:0) );
 		trigger->Lower();

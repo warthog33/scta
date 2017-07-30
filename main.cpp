@@ -214,11 +214,11 @@ int main (int argc, char** argv)
 
 	trigger->Init();	
 	std::vector<uint_8> output;
-	if ( strcasecmp ( algorithm, "DES" ) == 0 ) 
-		output = implementation->DoDESWithLogging ( input, key, flags );
-	else if ( strcasecmp ( algorithm, "AES" ) == 0 ) 
-		output = implementation->DoAESWithLogging ( input, key, flags );
-	else if ( strcasecmp ( algorithm, "RSA_ned" ) == 0 ) 
+	//if ( strcasecmp ( algorithm, "DES" ) == 0 && implementation->DoDES != CryptoImplementation.DoDES) 
+	//	output = implementation->DoDESWithLogging ( input, key, flags );
+	//else if ( strcasecmp ( algorithm, "AES" ) == 0 ) 
+	//	output = implementation->DoAESWithLogging ( input, key, flags );
+	if ( strcasecmp ( algorithm, "RSA_ned" ) == 0 ) 
 		output = implementation->DoRSA_ned_WithLogging ( input, n, e, d, flags );
 	else if ( strcasecmp ( algorithm, "RSA_epq" ) == 0 ) 
 		output = implementation->DoRSA_epq_WithLogging ( input, e, p, q, flags );

@@ -9,33 +9,38 @@
 #include "gcrypt.h"
 //#include "mpi.h"
 
-std::vector<uint_8> LibGCrypt::DoDES ( std::vector<uint_8> const& input, std::vector<uint_8> const& key, FLAGS& flags )
+std::vector<uint_8> LibGCrypt::DoSymmetric ( const char* name, std::vector<uint_8> const& input, std::vector<uint_8> const& key_in, FLAGS& flags )
 {
-	if ( key.size() != 8 && key.size() != 16 && key.size() != 24 )
-		error_at_line ( 1, 0, __FILE__, __LINE__,  "Invalid key len");
-	if (( input.size() % 8 ) != 0 )
-		error (1, 0, "Data len not a multiple of 8" );
+	int cipher = 0;
+	std::vector<uint_8> key = key_in;
+	if ( strcasecmp ( name, "DES" ) == 0 )
+	{
+		if ( key.size() == 8 )
+			cipher = GCRY_CIPHER_DES;
+		else if ( key.size() == 16 )
+		{
+			key.insert ( key.end(), key.data(), key.data()+8 );
+			cipher = GCRY_CIPHER_3DES;
+		}
+		else if ( key.size() == 24 )
+			cipher = GCRY_CIPHER_3DES;
+		else
+			error_at_line ( 1, 0, __FILE__, __LINE__,  "Invalid key len");
+	}
+	else if ( strcasecmp ( name, "AES" ) == 0 )
+	{
+		cipher = GCRY_CIPHER_AES;
+	}
+	else
+		error_at_line ( 1, 0, __FILE__, __LINE__, "Unknown algorithm type %s\n", name );
 
-	//if (!gcry_check_version(GCRYPT_VERSION ))
-	//{
-		//error_at_line ( 1, 0, __FILE__, __LINE__, "libgcrypt version mismatch" );
-	//}	
 	gcry_error_t rc;
 	gcry_cipher_hd_t hdt;
-	rc = gcry_cipher_open ( &hdt, key.size() == 8 ? GCRY_CIPHER_DES : GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_ECB, 0 );
+	rc = gcry_cipher_open ( &hdt, cipher, GCRY_CIPHER_MODE_ECB, 0 );
 	if (rc != 0 )
 		error_at_line ( 1, 0, __FILE__, __LINE__, "gcry_cipher_open returned %i", rc );
 	
-	if ( key.size() == 16 )
-	{
-		std::vector<uint_8> extendedkey = key;
-		extendedkey.insert ( extendedkey.end(), key.data(), key.data()+8 );
-		rc = gcry_cipher_setkey ( hdt, extendedkey.data(), extendedkey.size());
-	}
-	else
-	{	
-		rc = gcry_cipher_setkey ( hdt, key.data(), key.size() );
-	}
+	rc = gcry_cipher_setkey ( hdt, key.data(), key.size() );
 	if (rc != 0 )
 		error_at_line ( 1, 0, __FILE__, __LINE__, "gcry_cipher_setkey returned %x", rc );
 
@@ -44,7 +49,7 @@ std::vector<uint_8> LibGCrypt::DoDES ( std::vector<uint_8> const& input, std::ve
 		flags = (FLAGS)(flags | ENCRYPT);
 
 	if ( flags & RUN_TWICE )	
-		rc = (flags & ENCRYPT ? gcry_cipher_encrypt : gcry_cipher_decrypt ) ( hdt, output.data(), output.size(), input.data(), input.size() );	
+		rc = (flags & ENCRYPT ? gcry_cipher_encrypt : gcry_cipher_decrypt ) ( hdt, output.data(), output.size(), output.data(), output.size() );	
 
 	trigger->Raise();
 	rc = (flags & ENCRYPT ? gcry_cipher_encrypt : gcry_cipher_decrypt ) ( hdt, output.data(), output.size(), input.data(), input.size() );	
@@ -57,49 +62,6 @@ std::vector<uint_8> LibGCrypt::DoDES ( std::vector<uint_8> const& input, std::ve
 	gcry_cipher_close ( hdt );
 	return output;
 }
-
-
-
-std::vector<uint_8> LibGCrypt::DoAES ( std::vector<uint_8>const& input, std::vector<uint_8>const& key, FLAGS& flags )
-{
-	if ( key.size() != 16 && key.size() != 24 && key.size() != 32)
-		error_at_line ( 1, 0, __FILE__, __LINE__,  "Invalid key len");
-	if (( input.size() % 16 ) != 0 )
-		error (1, 0, "Data len not a multiple of 8" );
-
-	gcry_error_t rc;
-	gcry_cipher_hd_t hdt;
-	rc = gcry_cipher_open ( &hdt, GCRY_CIPHER_AES, GCRY_CIPHER_MODE_ECB, 0 );
-	if (rc != 0 )
-		error_at_line ( 1, 0, __FILE__, __LINE__, "gcry_cipher_open returned %i", rc );
-	
-	rc = gcry_cipher_setkey ( hdt, key.data(), key.size() );
-	if (rc != 0 )
-		error_at_line ( 1, 0, __FILE__, __LINE__, "gcry_cipher_setkey returned %x", rc );
-
-	if (( flags & ( ENCRYPT | DECRYPT )) == 0  ) 
-		flags = (FLAGS)(flags | ENCRYPT);
-
-	std::vector<uint_8> output ( input.size());
-	if ( flags & ENCRYPT ) 
-	{
-		trigger->Raise();
-		rc = gcry_cipher_encrypt ( hdt, output.data(), output.size(), input.data(), input.size() );	
-		trigger->Lower();
-	}
-	else
-	{
-		trigger->Raise();
-		rc = gcry_cipher_decrypt ( hdt, output.data(), output.size(), input.data(), input.size() );
-		trigger->Lower();
-	}
-	if (rc != 0 )
-		error_at_line ( 1, 0, __FILE__, __LINE__, "gcry_cipher_encrypt returned %i", rc );
-
-	gcry_cipher_close ( hdt );
-	return output;
-}
-
 
 
 static std::vector<uint_8> DoRSA2 ( std::vector<uint_8>const& input, gcry_sexp_t rsa_key, FLAGS& flags )
