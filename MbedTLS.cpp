@@ -1,9 +1,8 @@
 #include <error.h>
 #include <endian.h>
 #include <stdlib.h>
-#include "scta.h"
-//#include "DES.h"
 #include <stdio.h>
+#include "scta.h"
 #include "Trigger.h"
 
 #include "mbedtls/des.h"

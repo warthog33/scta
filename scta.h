@@ -38,7 +38,12 @@ class CryptoImplementation
 		std::cout << "DES i=" << input << " o=" << output << " k=" << key << " " << GetName() << flags << std::endl; 
 		return output;
 	}
-
+	std::vector<uint_8> DoSymmetricWithLogging ( const char* name, std::vector<uint_8>const & input, std::vector<uint_8>const& key, FLAGS flags = NONE)
+	{
+		std::vector<uint_8> output  = DoSymmetric ( name, input, key, flags ); 
+		std::cout << name << " i=" << input << " o=" << output << " k=" << key << " " << GetName() << flags << std::endl; 
+		return output;
+	}
 	std::vector<uint_8> DoRSA_ned_WithLogging ( std::vector<uint_8>const & input, std::vector<uint_8>& n, std::vector<uint_8>& e, std::vector<uint_8>& d, FLAGS flags = NONE )
 	{
 		std::vector<uint_8> output  = DoRSA_ned ( input, n, e, d, flags ); 
@@ -66,6 +71,8 @@ class CryptoImplementation
 	}	
 	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ) = 0 ; 
 	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ) = 0 ; 
+	virtual std::vector<uint_8> DoSymmetric ( const char* name, std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ) 
+	{ error ( 1, 0, "Not Implemented" ); return std::vector<uint_8>(); }
 	virtual std::vector<uint_8> DoRSA_KeyGen ( std::vector<uint_8> const & input, int numbits, FLAGS& flags )
 	{ error ( 1, 0, "Not Implemented" ); return std::vector<uint_8>(); }
 	virtual std::vector<uint_8> DoRSA_KeyFile ( std::vector<uint_8> const & input, const char* keyfilename, FLAGS& flags )
@@ -149,4 +156,5 @@ class KernelCrypto : public CryptoImplementation
 	virtual const char* GetName () { return "KernelCrypto"; }
 	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
 	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
+	virtual std::vector<uint_8> DoSymmetric ( const char* name, std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
 };

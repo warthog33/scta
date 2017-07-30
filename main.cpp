@@ -90,10 +90,11 @@ void PrintUsage()
 	printf ( "    -i<input> is string of hexadecimal characters, length must be multiple of block size of cipher\n" );
 	printf ( "           can be one of the following formats: Zeros<numbits>, Ones<numbits> or FFs<numbits>\n" );
 	printf ( "    -a<algorithm> currently supported include DES, AES, RSA_ned, RSA_epq\n" );
+	printf ( "         for Kernel crypto this is the driver/template name from /proc/crypto, eg ecb(aes) or ecb-aes-omap\n" );
 	printf ( "    -m<implementation> currently supported: mbedtls, openssl, SimpleSoftware, WolfCrypt  \n" );
 	printf ( "       TexasInstruments, TomCrypt, SmartCardAES (masked decryption only), KernelCrypto \n" );
 	printf ( "    -t<trigger> currently supported options include StdOut, BeagleBone (pin5 on BeagleBoneBlack) or SysGpio(/sys/class/gpio/gpio60) \n" );
-	printf ( "    -f<encrypt|decrypt|printintermediatevalues~runtwice> flags, see below\n" );
+	printf ( "    -f<encrypt|decrypt|printintermediatevalues|RunTwice> flags, see below\n" );
 	printf ( "       runtwice: run the crypto twice, only triggering on the second operation to help with cache hits\n" );
 	printf ( "    -s Run Self tests \n" );
 	printf ( "Note:\n" );
@@ -225,8 +226,8 @@ int main (int argc, char** argv)
 		output = implementation->DoRSA_KeyGen_WithLogging ( input, numbits, flags );
 	else if ( strcasecmp ( algorithm, "RSA_KeyFile" ) == 0 ) 
 		output = implementation->DoRSA_KeyFile_WithLogging ( input, keyFile, flags );
-	else
-		printf ( "Unknown algorithm\n" );
+	else 
+		output = implementation->DoSymmetricWithLogging ( algorithm, input, key, flags );
 }
 
 

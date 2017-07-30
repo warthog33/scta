@@ -107,6 +107,10 @@ std::vector<uint_8> KernelCrypto::DoDES ( std::vector<uint_8> const& input, std:
 
 std::vector<uint_8> KernelCrypto::DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const & key, FLAGS& flags )
 {
-	//return DoKernelSymmetric ( "ecb(aes)", input, key, flags );
-	return DoKernelSymmetric ( "ecb-aes-omap", input, key, flags );
+	return DoKernelSymmetric ( "ecb(aes)", input, key, flags );
+	//return DoKernelSymmetric ( "ecb-aes-omap", input, key, flags );
+}
+std::vector<uint_8> KernelCrypto::DoSymmetric ( const char* name, std::vector<uint_8> const & input, std::vector<uint_8> const & key, FLAGS& flags )
+{
+	return DoKernelSymmetric ( name, input, key, flags );
 }
