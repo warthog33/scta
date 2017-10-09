@@ -44,6 +44,8 @@ std::ostream& operator << ( std::ostream& os, FLAGS flags )
 		os << " CRT";	
 	if ( flags & RUN_TWICE )
 		os << " RunTwice";	
+	if ( flags & TRIGGER_PER_ROUND )
+		os << " TriggerPerRound";	
 	return os;
 }
 std::vector<uint_8>  StringToByteArray ( char* string )
@@ -192,6 +194,8 @@ int main (int argc, char** argv)
 			flags = (FLAGS)(flags | PRINT_INTERMEDIATE_VALUES);
 		 else if ( strcasecmp ( optarg, "runtwice" ) == 0 )
 			flags = (FLAGS)(flags | RUN_TWICE);
+		 else if ( strcasecmp ( optarg, "triggerperround" ) == 0 )
+			flags = (FLAGS)(flags | TRIGGER_PER_ROUND);
 		 else
 			error_at_line (1, 0, __FILE__, __LINE__, "Unknown flag %s", optarg );
 		 break;	
@@ -292,6 +296,7 @@ void RunSelfTests ()
 	kernelCrypto->DoDESWithLogging ( input, key3, flags);
 	libGCrypt->DoDESWithLogging ( input, key3, flags);
 
+	simpleSoftware->DoAESWithLogging ( input, key4, flags );
 	mbedTLS->DoAESWithLogging ( input, key4, flags);
 	texasInstruments->DoAESWithLogging ( input, key4, flags);
 	openSSL->DoAESWithLogging ( input, key4, flags);

@@ -13,6 +13,7 @@ typedef enum
 	CRT     = 4,
 	PRINT_INTERMEDIATE_VALUES = 0x8,
 	RUN_TWICE = 0x10,
+	TRIGGER_PER_ROUND = 0x20
 } FLAGS;
 
 //std::string Log ( std::vector<uint_8>const & v );

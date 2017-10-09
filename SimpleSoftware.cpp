@@ -2,6 +2,9 @@
 #include <endian.h>
 #include "scta.h"
 #include "Simple/DES.h"
+extern "C" {
+#include "Simple/aes.h"
+}
 #include "Trigger.h"
 #include <stdio.h>
 
@@ -79,6 +82,22 @@ std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> co
 }
 
 
+static void RaiseTrigger()
+{
+	trigger->Raise();	
+}
+static void LowerTrigger()
+{
+	trigger->Lower();
+}
 std::vector<uint_8> SimpleSoftwareImplementation::DoAES ( std::vector<uint_8>const& input, std::vector<uint_8> const& key, FLAGS& flags )
 {
+	std::vector<uint_8> output(input.size());
+	trigger->Raise();
+	if ( flags & TRIGGER_PER_ROUND )
+		AES_ECB_encrypt_with_round_triggers ( input.data(), key.data(), output.data(), output.size(), RaiseTrigger, LowerTrigger );
+	else
+		AES_ECB_encrypt ( input.data(), key.data(), output.data(), output.size() );
+	trigger->Lower();
+	return output;
 }
