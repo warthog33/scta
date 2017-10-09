@@ -28,11 +28,14 @@ typedef enum {
 	DES_DECRYPT
 } DES_MODE;
 
+typedef void (*TRIGGER_FUNC)();
 /*********************** FUNCTION DECLARATIONS **********************/
 void des_key_setup(const BYTE key[], BYTE schedule[][6], DES_MODE mode);
 void des_crypt(const BYTE in[], BYTE out[], const BYTE key[][6]);
+void des_crypt_with_round_triggers(const BYTE in[], BYTE out[], const BYTE key[][6], TRIGGER_FUNC raiseTrigger, TRIGGER_FUNC lowerTrigger);
 
 void three_des_key_setup(const BYTE key[], BYTE schedule[][16][6], DES_MODE mode);
 void three_des_crypt(const BYTE in[], BYTE out[], const BYTE key[][16][6]);
+void three_des_crypt_with_round_triggers(const BYTE in[], BYTE out[], const BYTE key[][16][6], TRIGGER_FUNC raiseTrigger, TRIGGER_FUNC lowerTrigger);
 
 #endif // DES_H

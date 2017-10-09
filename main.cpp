@@ -96,8 +96,9 @@ void PrintUsage()
 	printf ( "    -m<implementation> currently supported: mbedtls, openssl, SimpleSoftware, WolfCrypt  \n" );
 	printf ( "       TexasInstruments, TomCrypt, SmartCardAES (masked decryption only), KernelCrypto \n" );
 	printf ( "    -t<trigger> currently supported options include StdOut, BeagleBone (pin5 on BeagleBoneBlack) or SysGpio(/sys/class/gpio/gpio60) \n" );
-	printf ( "    -f<encrypt|decrypt|printintermediatevalues|RunTwice> flags, see below\n" );
+	printf ( "    -f<encrypt|decrypt|printintermediatevalues|RunTwice|TriggerPerRound> flags, see below\n" );
 	printf ( "       runtwice: run the crypto twice, only triggering on the second operation to help with cache hits\n" );
+	printf ( "       triggerPerRound: raise and lower the trigger once per round, only works with SimpleSoftware\n" );
 	printf ( "    -s Run Self tests \n" );
 	printf ( "Note:\n" );
 	printf ( "  RSA for TomCrypt does not do blinding, but does do CRT\n" );

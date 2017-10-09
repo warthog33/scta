@@ -248,6 +248,27 @@ void des_crypt(const BYTE in[], BYTE out[], const BYTE key[][6])
 	InvIP(state,out);
 }
 
+
+void des_crypt_with_round_triggers(const BYTE in[], BYTE out[], const BYTE key[][6], TRIGGER_FUNC raiseTrigger, TRIGGER_FUNC lowerTrigger)
+{
+	WORD state[2],idx,t;
+
+	IP(state,in);
+
+	for (idx=0; idx < 15; ++idx) {
+		raiseTrigger();
+		t = state[1];
+		state[1] = f(state[1],key[idx]) ^ state[0];
+		state[0] = t;
+		lowerTrigger();
+	}
+	// Perform the final loop manually as it doesn't switch sides
+	raiseTrigger();
+	state[0] = f(state[1],key[15]) ^ state[0];
+	lowerTrigger();
+
+	InvIP(state,out);
+}
 void three_des_key_setup(const BYTE key[], BYTE schedule[][16][6], DES_MODE mode)
 {
 	if (mode == DES_ENCRYPT) {
@@ -267,4 +288,11 @@ void three_des_crypt(const BYTE in[], BYTE out[], const BYTE key[][16][6])
 	des_crypt(in,out,key[0]);
 	des_crypt(out,out,key[1]);
 	des_crypt(out,out,key[2]);
+}
+
+void three_des_crypt_with_round_triggers(const BYTE in[], BYTE out[], const BYTE key[][16][6], TRIGGER_FUNC raiseTrigger, TRIGGER_FUNC lowerTrigger)
+{
+	des_crypt_with_round_triggers(in,out,key[0], raiseTrigger, lowerTrigger);
+	des_crypt_with_round_triggers(out,out,key[1], raiseTrigger, lowerTrigger);
+	des_crypt_with_round_triggers(out,out,key[2], raiseTrigger, lowerTrigger);
 }

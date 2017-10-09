@@ -8,6 +8,15 @@ extern "C" {
 #include "Trigger.h"
 #include <stdio.h>
 
+
+static void RaiseTrigger()
+{
+	trigger->Raise();	
+}
+static void LowerTrigger()
+{
+	trigger->Lower();
+}
 std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> const& input2, std::vector<uint_8>const& key, FLAGS& flags )
 {
 /*
@@ -87,22 +96,43 @@ std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> co
     }
 */
 
+
    std::vector<uint_8> output ( input2.size() );
    if ( key.size() == 8 ) 
    {
    	BYTE schedule[16][6];
    	des_key_setup(key.data(), schedule, DES_ENCRYPT);
-   
-   	for ( int i = 0; i < output.size(); i+= 8 )
-   		des_crypt(input2.data()+i, output.data()+i, schedule);
+  
+	if ( flags & TRIGGER_PER_ROUND )
+	{
+   		for ( int i = 0; i < output.size(); i+= 8 )
+   			des_crypt_with_round_triggers(input2.data()+i, output.data()+i, schedule, RaiseTrigger, LowerTrigger);
+	}
+	else
+	{
+		trigger->Raise(); 
+   		for ( int i = 0; i < output.size(); i+= 8 )
+   			des_crypt(input2.data()+i, output.data()+i, schedule);
+		trigger->Lower();
+	}
    }
    else if ( key.size() == 24 )
    {
         BYTE three_schedule[3][16][6];
 	three_des_key_setup ( key.data(), three_schedule, DES_ENCRYPT );
-	
-   	for ( int i = 0; i < output.size(); i+= 8 )
-   		three_des_crypt(input2.data()+i, output.data()+i, three_schedule);
+
+	if ( flags & TRIGGER_PER_ROUND )
+	{	
+   		for ( int i = 0; i < output.size(); i+= 8 )
+   			three_des_crypt_with_round_triggers(input2.data()+i, output.data()+i, three_schedule, RaiseTrigger, LowerTrigger);
+	}
+	else
+	{
+		trigger->Raise(); 
+   		for ( int i = 0; i < output.size(); i+= 8 )
+   			three_des_crypt(input2.data()+i, output.data()+i, three_schedule);
+		trigger->Lower(); 
+	}
    }
    else
  	error_at_line ( 1, 0, __FILE__, __LINE__, "Unsupported key size %i", (int)key.size() );
@@ -110,15 +140,6 @@ std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> co
    return output;
 }
 
-
-static void RaiseTrigger()
-{
-	trigger->Raise();	
-}
-static void LowerTrigger()
-{
-	trigger->Lower();
-}
 std::vector<uint_8> SimpleSoftwareImplementation::DoAES ( std::vector<uint_8>const& input, std::vector<uint_8> const& key, FLAGS& flags )
 {
 	std::vector<uint_8> output(input.size());
