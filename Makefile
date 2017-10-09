@@ -5,6 +5,7 @@ scta:
 CC=gcc
 CXX = g++
 CXXFLAGS = -g
+CFLAGS = -g
 
 UNAME = $(shell /bin/uname -m)
 ifeq ($(UNAME),armv7l)
@@ -35,7 +36,7 @@ $(OPENSSL_OBJS): CXXFLAGS += -Iopenssl/include
 
 OBJS += $(OPENSSL_OBJS) $(OPENSSL_LIB)
 
-SIMPLE_OBJS = Simple/DES.o SimpleSoftware.o Simple/aes.o
+SIMPLE_OBJS = Simple/des.o SimpleSoftware.o Simple/aes.o
 #$(SIMPLE_OBJS): CFLAGS += -DECB=1
 
 OBJS += $(SIMPLE_OBJS)

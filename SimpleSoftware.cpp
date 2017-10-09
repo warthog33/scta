@@ -1,8 +1,8 @@
 #include <error.h>
 #include <endian.h>
 #include "scta.h"
-#include "Simple/DES.h"
 extern "C" {
+#include "Simple/des.h"
 #include "Simple/aes.h"
 }
 #include "Trigger.h"
@@ -10,6 +10,7 @@ extern "C" {
 
 std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> const& input2, std::vector<uint_8>const& key, FLAGS& flags )
 {
+/*
     // Sanity checks
     if (( input2.size() % 8 ) != 0 )
 	error ( 1, 0, "Invalid datalen(%i) in SimpleSoftwareImplementation::DoDES", (int)input2.size() );
@@ -44,6 +45,7 @@ std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> co
     for( ; datalen > 0 ; datalen -=8, input +=8, output+=8  )
     {
     	uint64_t data = be64toh(*(uint64_t*)input);
+    printf ( "Input=%016lx\n", data );
 
 	trigger->Raise();
 
@@ -54,7 +56,10 @@ std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> co
         if( flags & ENCRYPT )
         {
             for(int ii = 0; ii < 16; ii++)
+	    {
                 rounds(&data, a_key[ii]);
+    	        printf ( "Encrypt Round %2i Output=%016lx Key=%016lx\n", ii+1, data, a_key[ii] );
+            }
         }
         // Decrypt rounds
         else
@@ -63,7 +68,10 @@ std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> co
             data = (data << 32) + (data >> 32);
 
             for(int ii = 15; ii >= 0; ii--)
+	    {
                 rounds(&data, a_key[ii]);
+    	        printf ( "Decrypt Round %2i Output=%016lx\n", ii+1, data );
+	    }
             
             // Switching blocks back
             data = (data << 32) + (data >> 32);
@@ -77,8 +85,29 @@ std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> co
         // Write output
     	*(uint64_t*)output = htobe64(data);
     }
-   return output2;
+*/
 
+   std::vector<uint_8> output ( input2.size() );
+   if ( key.size() == 8 ) 
+   {
+   	BYTE schedule[16][6];
+   	des_key_setup(key.data(), schedule, DES_ENCRYPT);
+   
+   	for ( int i = 0; i < output.size(); i+= 8 )
+   		des_crypt(input2.data()+i, output.data()+i, schedule);
+   }
+   else if ( key.size() == 24 )
+   {
+        BYTE three_schedule[3][16][6];
+	three_des_key_setup ( key.data(), three_schedule, DES_ENCRYPT );
+	
+   	for ( int i = 0; i < output.size(); i+= 8 )
+   		three_des_crypt(input2.data()+i, output.data()+i, three_schedule);
+   }
+   else
+ 	error_at_line ( 1, 0, __FILE__, __LINE__, "Unsupported key size %i", (int)key.size() );
+
+   return output;
 }
 
 

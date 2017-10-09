@@ -288,6 +288,7 @@ void RunSelfTests ()
 	kernelCrypto->DoDESWithLogging ( input, key2, flags);
 	libGCrypt->DoDESWithLogging ( input, key2, flags);
 
+	simpleSoftware->DoDESWithLogging ( input, key3, flags);
 	mbedTLS->DoDESWithLogging ( input, key3, flags);
 	texasInstruments->DoDESWithLogging ( input, key3, flags);
 	openSSL->DoDESWithLogging ( input, key3, flags);
