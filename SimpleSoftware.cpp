@@ -7,6 +7,10 @@
 
 std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> const& input2, std::vector<uint_8>const& key, FLAGS& flags )
 {
+
+    if (( flags & (ENCRYPT|DECRYPT)) == 0 )
+	flags = (FLAGS)(flags | ENCRYPT );
+
     // Sanity checks
     if (( input2.size() % 8 ) != 0 )
 	error ( 1, 0, "Invalid datalen(%i) in SimpleSoftwareImplementation::DoDES", (int)input2.size() );
@@ -20,6 +24,7 @@ std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> co
 
     uint64_t a_key[16];
     a_key[0] = be64toh(*(uint64_t*)key.data());
+	printf ( "Key=%016lx\n", a_key[0] );
     uint64_t next_key;
 
     for(int ii = 0; ii < 16; ii++)
@@ -28,6 +33,7 @@ std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> co
         if(ii != 15)
             a_key[ii + 1] = next_key;
     }
+
 
     std::vector<uint_8> output2 ( input2.size() );
 
@@ -41,6 +47,7 @@ std::vector<uint_8> SimpleSoftwareImplementation::DoDES ( std::vector<uint_8> co
     for( ; datalen > 0 ; datalen -=8, input +=8, output+=8  )
     {
     	uint64_t data = be64toh(*(uint64_t*)input);
+	printf ( "data=%016lu datalen=%i\n", data, (int)datalen );
 
 	trigger->Raise();
 
