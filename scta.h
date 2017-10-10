@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string>
 #include <iostream>
+#include <string.h>
 
 typedef unsigned char uint_8;
 typedef enum 
@@ -13,6 +14,7 @@ typedef enum
 	CRT     = 4,
 	PRINT_INTERMEDIATE_VALUES = 0x8,
 	RUN_TWICE = 0x10,
+	TRIGGER_PER_ROUND = 0x20
 } FLAGS;
 
 //std::string Log ( std::vector<uint_8>const & v );
@@ -73,8 +75,16 @@ class CryptoImplementation
 	{ return DoSymmetric ( "AES", input, key, flags ); } 
 	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags )
 	{ return DoSymmetric ( "DES", input, key, flags ); }
-	virtual std::vector<uint_8> DoSymmetric ( const char* name, std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ) 
-	{ error ( 1, 0, "Not Implemented" ); return std::vector<uint_8>(); }
+	virtual std::vector<uint_8> DoSymmetric ( const char* name, std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags )
+	{ 
+	  if ( strcmp ( name, "AES" ) == 0 )
+		return DoAES(input, key, flags);
+	  else if ( strcmp ( name, "DES" ) == 0 )
+		return DoDES(input, key, flags);
+	  else
+		error ( 1, 0, "Not Implemented" ); 
+	  return std::vector<uint_8>();
+	}
 	virtual std::vector<uint_8> DoRSA_KeyGen ( std::vector<uint_8> const & input, int numbits, FLAGS& flags )
 	{ error ( 1, 0, "Not Implemented" ); return std::vector<uint_8>(); }
 	virtual std::vector<uint_8> DoRSA_KeyFile ( std::vector<uint_8> const & input, const char* keyfilename, FLAGS& flags )
@@ -91,7 +101,7 @@ class SimpleSoftwareImplementation : public CryptoImplementation
 	virtual const char* GetName () { return "SimpleSoftware"; }
 	virtual std::vector<uint_8> DoAES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
 	virtual std::vector<uint_8> DoDES ( std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
-	//virtual std::vector<uint_8> DoSymmetric ( const char* name, std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags ); 
+	//virtual std::vector<uint_8> DoSymmetric ( const char* name, std::vector<uint_8> const & input, std::vector<uint_8> const& key, FLAGS& flags );
 };
 class MbedTLSImplementation : public CryptoImplementation
 {

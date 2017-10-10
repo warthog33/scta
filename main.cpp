@@ -44,6 +44,8 @@ std::ostream& operator << ( std::ostream& os, FLAGS flags )
 		os << " CRT";	
 	if ( flags & RUN_TWICE )
 		os << " RunTwice";	
+	if ( flags & TRIGGER_PER_ROUND )
+		os << " TriggerPerRound";	
 	return os;
 }
 std::vector<uint_8>  StringToByteArray ( char* string )
@@ -94,8 +96,9 @@ void PrintUsage()
 	printf ( "    -m<implementation> currently supported: mbedtls, openssl, SimpleSoftware, WolfCrypt  \n" );
 	printf ( "       TexasInstruments, TomCrypt, SmartCardAES (masked decryption only), KernelCrypto \n" );
 	printf ( "    -t<trigger> currently supported options include StdOut, BeagleBone (pin5 on BeagleBoneBlack) or SysGpio(/sys/class/gpio/gpio60) \n" );
-	printf ( "    -f<encrypt|decrypt|printintermediatevalues|RunTwice> flags, see below\n" );
+	printf ( "    -f<encrypt|decrypt|printintermediatevalues|RunTwice|TriggerPerRound> flags, see below\n" );
 	printf ( "       runtwice: run the crypto twice, only triggering on the second operation to help with cache hits\n" );
+	printf ( "       triggerPerRound: raise and lower the trigger once per round, only works with SimpleSoftware\n" );
 	printf ( "    -s Run Self tests \n" );
 	printf ( "Note:\n" );
 	printf ( "  RSA for TomCrypt does not do blinding, but does do CRT\n" );
@@ -192,6 +195,8 @@ int main (int argc, char** argv)
 			flags = (FLAGS)(flags | PRINT_INTERMEDIATE_VALUES);
 		 else if ( strcasecmp ( optarg, "runtwice" ) == 0 )
 			flags = (FLAGS)(flags | RUN_TWICE);
+		 else if ( strcasecmp ( optarg, "triggerperround" ) == 0 )
+			flags = (FLAGS)(flags | TRIGGER_PER_ROUND);
 		 else
 			error_at_line (1, 0, __FILE__, __LINE__, "Unknown flag %s", optarg );
 		 break;	
@@ -284,6 +289,7 @@ void RunSelfTests ()
 	kernelCrypto->DoDESWithLogging ( input, key2, flags);
 	libGCrypt->DoDESWithLogging ( input, key2, flags);
 
+	simpleSoftware->DoDESWithLogging ( input, key3, flags);
 	mbedTLS->DoDESWithLogging ( input, key3, flags);
 	texasInstruments->DoDESWithLogging ( input, key3, flags);
 	openSSL->DoDESWithLogging ( input, key3, flags);
@@ -292,6 +298,7 @@ void RunSelfTests ()
 	kernelCrypto->DoDESWithLogging ( input, key3, flags);
 	libGCrypt->DoDESWithLogging ( input, key3, flags);
 
+	simpleSoftware->DoAESWithLogging ( input, key4, flags );
 	mbedTLS->DoAESWithLogging ( input, key4, flags);
 	texasInstruments->DoAESWithLogging ( input, key4, flags);
 	openSSL->DoAESWithLogging ( input, key4, flags);

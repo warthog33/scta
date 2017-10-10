@@ -5,6 +5,7 @@ scta:
 CC=gcc
 CXX = g++
 CXXFLAGS = -g
+CFLAGS = -g
 
 UNAME = $(shell /bin/uname -m)
 ifeq ($(UNAME),armv7l)
@@ -17,7 +18,6 @@ endif
 
 
 OBJS =  main.o Trigger.o
-OBJS += Simple/DES.o SimpleSoftware.o 
 OBJS += TexasInstruments/TI_aes_128.o TexasInstruments/DES.o TexasInstruments.o
 OBJS += smartcard-aes-fw-master/inv_aes.o SmartCardAES.o
 OBJS += KernelCrypto.o
@@ -36,7 +36,10 @@ $(OPENSSL_OBJS): CXXFLAGS += -Iopenssl/include
 
 OBJS += $(OPENSSL_OBJS) $(OPENSSL_LIB)
 
+SIMPLE_OBJS = Simple/des.o SimpleSoftware.o Simple/aes.o
+#$(SIMPLE_OBJS): CFLAGS += -DECB=1
 
+OBJS += $(SIMPLE_OBJS)
 
 MBED_OBJS = MbedTLS.o
 MBED_LIB = mbedtls/lib/libmbedcrypto.a
