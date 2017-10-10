@@ -441,28 +441,23 @@ static void Cipher_with_round_triggers(TRIGGER_FUNC raiseTrigger, TRIGGER_FUNC l
   uint8_t round = 0;
 
   // Add the First round key to the state before starting the rounds.
+  raiseTrigger();
   AddRoundKey(0); 
+  lowerTrigger();
   
   // There will be Nr rounds.
-  // The first Nr-1 rounds are identical.
-  // These Nr-1 rounds are executed in the loop below.
-  for (round = 1; round < Nr; ++round)
+  // The first Nr-1 rounds are identical, round Nr skips the MixColumns step
+  // These Nr rounds are executed in the loop below.
+  for (round = 1; round <= Nr; ++round)
   {
     raiseTrigger();
     SubBytes();
     ShiftRows();
-    MixColumns();
+    if ( round != Nr )
+    	MixColumns();
     AddRoundKey(round);
     lowerTrigger();
   }
-  
-  // The last round is given below.
-  // The MixColumns function is not here in the last round.
-  raiseTrigger();
-  SubBytes();
-  ShiftRows();
-  AddRoundKey(Nr);
-  lowerTrigger();
 }
 
 static void InvCipher(void)
