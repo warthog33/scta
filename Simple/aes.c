@@ -441,22 +441,22 @@ static void Cipher_with_round_triggers(TRIGGER_FUNC raiseTrigger, TRIGGER_FUNC l
   uint8_t round = 0;
 
   // Add the First round key to the state before starting the rounds.
-  raiseTrigger();
-  AddRoundKey(0); 
   lowerTrigger();
+  AddRoundKey(0); 
+  raiseTrigger();
   
   // There will be Nr rounds.
   // The first Nr-1 rounds are identical, round Nr skips the MixColumns step
   // These Nr rounds are executed in the loop below.
   for (round = 1; round <= Nr; ++round)
   {
-    raiseTrigger();
+    lowerTrigger();
     SubBytes();
     ShiftRows();
     if ( round != Nr )
     	MixColumns();
     AddRoundKey(round);
-    lowerTrigger();
+    raiseTrigger();
   }
 }
 

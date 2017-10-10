@@ -146,7 +146,16 @@ std::vector<uint_8> TomCrypt::DoRSA_epq ( std::vector<uint_8> const& input, std:
 	std::vector<uint_8> output (input.size());
 	unsigned long outputlen = output.size();
 
+	if ( flags & RUN_TWICE )
+	{
+		output[0] = 0xFF;
+		rsa_exptmod ( output.data(), output.size(), output.data(), &outputlen, PK_PRIVATE, &key );
+	}
+
+	trigger->Raise();
 	rc = rsa_exptmod ( input.data(), input.size(), output.data(), &outputlen, PK_PRIVATE, &key );
+	trigger->Lower();
+	
 	if ( rc != CRYPT_OK )
 		error_at_line(1,0,__FILE__,__LINE__, "rsa_exptmod returned error %i", rc );
 

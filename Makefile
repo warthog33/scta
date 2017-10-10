@@ -4,8 +4,8 @@ scta:
 *.o: Makefile
 CC=gcc
 CXX = g++
-CXXFLAGS = -g
-CFLAGS = -g
+CXXFLAGS = -O
+CFLAGS = -O
 
 UNAME = $(shell /bin/uname -m)
 ifeq ($(UNAME),armv7l)
@@ -111,10 +111,10 @@ $(TOMLIBS):
 	cd libtomcrypt; unzip -o tomsfastmath-develop.zip
 	cd libtomcrypt/tomsfastmath-develop; make LIBPATH=`pwd`/../lib INCPATH=`pwd`/../include DATAPATH=`pwd`/../docs install
 	cd libtomcrypt; unzip -o libtomcrypt-develop.zip
-	cd libtomcrypt/libtomcrypt-develop; CFLAGS="-g -DTFM_DESC -DUSE_TFM -DLTC_NO_RSA_BLINDING -I../include" NODOCS=1 make LIBPATH=`pwd`/../lib INCPATH=`pwd`/../include DATAPATH=`pwd`/../docs install
+	cd libtomcrypt/libtomcrypt-develop; CFLAGS="-g -DTFM_DESC -DUSE_TFM -DLTC_NO_RSA_BLINDING -DLTC_NO_RSA_CRT_HARDENING -I../include" NODOCS=1 make LIBPATH=`pwd`/../lib INCPATH=`pwd`/../include DATAPATH=`pwd`/../docs install
 
 $(TOMOBJS): $(TOMLIBS)
-$(TOMOBJS): CXXFLAGS += -Ilibtomcrypt/include/ -DUSE_TFM -DTFM_DESC -DLTC_NO_RSA_BLINDING
+$(TOMOBJS): CXXFLAGS += -Ilibtomcrypt/include/ -DUSE_TFM -DTFM_DESC -DLTC_NO_RSA_BLINDING -DLTC_NO_RSA_CRT_HARDENING
 
 OBJS += $(TOMOBJS) $(TOMLIBS)
 endif

@@ -256,16 +256,16 @@ void des_crypt_with_round_triggers(const BYTE in[], BYTE out[], const BYTE key[]
 	IP(state,in);
 
 	for (idx=0; idx < 15; ++idx) {
-		raiseTrigger();
+		lowerTrigger();
 		t = state[1];
 		state[1] = f(state[1],key[idx]) ^ state[0];
 		state[0] = t;
-		lowerTrigger();
+		raiseTrigger();
 	}
 	// Perform the final loop manually as it doesn't switch sides
-	raiseTrigger();
-	state[0] = f(state[1],key[15]) ^ state[0];
 	lowerTrigger();
+	state[0] = f(state[1],key[15]) ^ state[0];
+	raiseTrigger();
 
 	InvIP(state,out);
 }

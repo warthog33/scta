@@ -8,6 +8,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <vector>
+#include <sched.h>
 #include "scta.h"
 #include "Trigger.h"
 
@@ -218,6 +219,13 @@ int main (int argc, char** argv)
 	}	
 
 	trigger->Init();	
+	int policy = SCHED_FIFO;
+	struct sched_param schp;
+	schp.sched_priority = sched_get_priority_max(policy);
+	int rc = sched_setscheduler ( 0, policy, &schp );
+	if (rc != 0 )
+		error_at_line ( 1, 0, __FILE__, __LINE__, "sched_setscheduler error %i", rc );
+
 	std::vector<uint_8> output;
 	//if ( strcasecmp ( algorithm, "DES" ) == 0 && implementation->DoDES != CryptoImplementation.DoDES) 
 	//	output = implementation->DoDESWithLogging ( input, key, flags );
